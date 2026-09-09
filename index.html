@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JTF Learning System</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%9A%A1</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: oklch(96.4% 0.006 240);
+    --surface: oklch(99% 0.003 240);
+    --surface-alt: oklch(93.2% 0.009 240);
+    --border: oklch(84.5% 0.013 240);
+    --border-soft: oklch(89.5% 0.01 240);
+    --text: oklch(21% 0.014 240);
+    --text-muted: oklch(45% 0.02 240);
+    --text-faint: oklch(59% 0.017 240);
+    --accent: oklch(50% 0.14 250);
+    --brand-green: oklch(56% 0.14 152);
+    --good: oklch(56% 0.14 152);
+    --risk: oklch(58% 0.17 25);
+    --warn: oklch(64% 0.15 70);
+    --neutral-status: oklch(62% 0.01 240);
+    --shadow: oklch(20% 0 0 / 8%);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: oklch(19% 0.012 240);
+      --surface: oklch(24% 0.013 240);
+      --surface-alt: oklch(27.5% 0.014 240);
+      --border: oklch(34% 0.016 240);
+      --border-soft: oklch(30% 0.015 240);
+      --text: oklch(93% 0.006 240);
+      --text-muted: oklch(72% 0.014 240);
+      --text-faint: oklch(56% 0.014 240);
+      --accent: oklch(72% 0.13 250);
+      --brand-green: oklch(70% 0.13 152);
+      --good: oklch(70% 0.13 152);
+      --risk: oklch(66% 0.17 25);
+      --warn: oklch(74% 0.14 70);
+      --neutral-status: oklch(58% 0.012 240);
+      --shadow: oklch(0% 0 0 / 35%);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: oklch(19% 0.012 240);
+    --surface: oklch(24% 0.013 240);
+    --surface-alt: oklch(27.5% 0.014 240);
+    --border: oklch(34% 0.016 240);
+    --border-soft: oklch(30% 0.015 240);
+    --text: oklch(93% 0.006 240);
+    --text-muted: oklch(72% 0.014 240);
+    --text-faint: oklch(56% 0.014 240);
+    --accent: oklch(72% 0.13 250);
+    --brand-green: oklch(70% 0.13 152);
+    --good: oklch(70% 0.13 152);
+    --risk: oklch(66% 0.17 25);
+    --warn: oklch(74% 0.14 70);
+    --neutral-status: oklch(58% 0.012 240);
+    --shadow: oklch(0% 0 0 / 35%);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Public Sans', -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 40px 40px 64px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    transition: box-shadow .15s ease, border-color .15s ease;
+  }
+  .card:hover { box-shadow: 0 6px 20px var(--shadow); border-color: var(--border-soft); }
+
+  .track { background: var(--border-soft); border-radius: 999px; height: 6px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 999px; width: calc(var(--fill, 0) * 1%); background: var(--neutral-status); }
+  .fill.status-good { background: var(--good); }
+  .fill.status-risk { background: var(--risk); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+  }
+  .badge-accent { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: color-mix(in srgb, var(--accent) 72%, var(--text)); }
+  .badge-neutral { background: var(--surface-alt); color: var(--text-muted); border: 1px solid var(--border); }
+
+  .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  @media (max-width: 880px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+  .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 720px) { .nav-grid { grid-template-columns: 1fr; } }
+
+  .nav-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    width: 100%; padding: 16px 18px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    cursor: pointer; text-align: left; font: inherit; color: inherit;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .nav-btn:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  }
+  .nav-btn:active { transform: scale(0.99); }
+  .nav-btn .arrow { color: var(--text-faint); display: flex; transition: color .15s ease, transform .15s ease; }
+  .nav-btn:hover .arrow { color: var(--accent); transform: translateX(2px); }
+
+  .ptable { display: grid; grid-template-columns: 1.5fr repeat(4, 0.8fr); column-gap: 6px; }
+  .ptable .hd { color: var(--text-muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .ptable .cell { padding: 7px 0; font-size: 13px; display: flex; align-items: center; }
+  .ptable .num { justify-content: flex-end; }
+  .ptable .total .cell { border-top: 1px solid var(--border); font-weight: 700; padding-top: 10px; margin-top: 2px; }
+
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+  .subcols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .subcols > div:not(:first-child) { border-left: 1px solid var(--border); padding-left: 16px; }
+  @media (max-width: 560px) {
+    .subcols { grid-template-columns: 1fr; }
+    .subcols > div:not(:first-child) { border-left: none; padding-left: 0; padding-top: 14px; margin-top: 2px; border-top: 1px solid var(--border); }
+  }
+  .subcol-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-bottom: 12px; }
+  .submetric + .submetric { margin-top: 14px; }
+  .submetric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+  .submetric-values { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
+  .submetric-current { font-size: 13px; font-weight: 600; }
+  .submetric-target { font-size: 12px; color: var(--text-faint); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:8px;">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <svg width="34" height="34" viewBox="0 0 34 34" style="flex-shrink:0;">
+        <rect x="2" y="20" width="6" height="12" rx="1.5" fill="var(--border)"></rect>
+        <rect x="10" y="13" width="6" height="19" rx="1.5" fill="var(--text-faint)"></rect>
+        <rect x="18" y="7" width="6" height="25" rx="1.5" fill="var(--accent)"></rect>
+        <rect x="26" y="2" width="6" height="30" rx="1.5" fill="var(--brand-green)"></rect>
+      </svg>
+      <div>
+        <div style="font-size:12px; font-weight:700; letter-spacing:.08em; color:var(--text-muted); text-transform:uppercase;">Just Transition Fund</div>
+        <div style="font-size:22px; font-weight:700; color:var(--text); line-height:1.2;">Learning System</div>
+      </div>
+    </div>
+    <div class="badge badge-neutral">Preview &middot; Sample data</div>
+  </div>
+
+  <p style="max-width:640px; color:var(--text-muted); font-size:14px; line-height:1.55; margin:4px 0 32px;">
+    Track progress toward the 2026 and 2026&ndash;2029 goals, program health, and the active grant portfolio at a glance &mdash; then drill into grantees, programs, regions, or reports below.
+  </p>
+
+  <!-- DASHBOARD GRID -->
+  <div class="dashboard-grid" style="margin-bottom:36px;">
+
+    <!-- DIAL 1: 2026 GOALS -->
+    <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:18px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:var(--accent); display:flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+          </span>
+          <span style="font-size:15px; font-weight:700;">2026 Goals</span>
+        </div>
+        <span class="badge badge-accent">Annual</span>
+      </div>
+
+      <div class="subcols">
+        <div>
+          <div class="subcol-title">Economic output</div>
+          <div class="submetric">
+            <div class="submetric-label">Growth generated</div>
+            <div class="submetric-values">
+              <span class="submetric-current mono">$78M</span>
+              <span class="submetric-target mono">/ $125M</span>
+            </div>
+            <div class="track"><div class="fill status-good" style="--fill:62;"></div></div>
+          </div>
+          <div class="submetric">
+            <div class="submetric-label">Brightspot candidates</div>
+            <div class="submetric-values">
+              <span class="submetric-current mono">6</span>
+              <span class="submetric-target mono">/ 10</span>
+            </div>
+            <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="subcol-title">Readiness</div>
+          <div class="submetric">
+            <div class="submetric-label">Communities advanced</div>
+            <div class="submetric-values">
+              <span class="submetric-current mono">6</span>
+              <span class="submetric-target mono">/ 10</span>
+            </div>
+            <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
+          </div>
+          <div class="submetric">
+            <div class="submetric-label">Projects in pipeline</div>
+            <div class="submetric-values">
+              <span class="submetric-current mono">16</span>
+              <span class="submetric-target mono">/ 25</span>
+            </div>
+            <div class="track"><div class="fill status-good" style="--fill:64;"></div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="subcol-title">Reach</div>
+          <div class="submetric">
+            <div class="submetric-label">Total communities reached</div>
+            <div class="submetric-values">
+              <span class="submetric-current mono">58</span>
+              <span class="submetric-target mono">/ 100</span>
+            </div>
+            <div class="track"><div class="fill status-good" style="--fill:58;"></div></div>
+          </div>
+          <div class="submetric">
+            <div class="submetric-label">New reached via LEL</div>
+            <div class="submetric-values">
+              <span class="submetric-current mono">12</span>
+              <span class="submetric-target mono">/ 20</span>
+            </div>
+            <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
+          </div>
+          <div class="submetric">
+            <div class="submetric-label">New reached via TE</div>
+            <div class="submetric-values">
+              <span class="submetric-current mono">5</span>
+              <span class="submetric-target mono">/ 8</span>
+            </div>
+            <div class="track"><div class="fill status-good" style="--fill:63;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAL 2: 2026-2029 GOALS -->
+    <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:var(--accent); display:flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 9.5 9.5 13.5 13.5 21 6"></polyline><polyline points="14.5 6 21 6 21 12.5"></polyline></svg>
+          </span>
+          <span style="font-size:15px; font-weight:700;">2026&ndash;2029 Goals</span>
+        </div>
+        <span class="badge badge-accent">Cumulative</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:11px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">Capital deployed</span>
+          <div class="track" style="flex:1;"><div class="fill status-good" style="--fill:51;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">$34M/$67M</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">Economic output</span>
+          <div class="track" style="flex:1;"><div class="fill status-risk" style="--fill:42;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">$420M/$1B</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">Reach</span>
+          <div class="track" style="flex:1;"><div class="fill status-good" style="--fill:58;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">58%/100%</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">Readiness</span>
+          <div class="track" style="flex:1;"><div class="fill status-risk" style="--fill:47;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">14/30 comm.</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">Models</span>
+          <div class="track" style="flex:1;"><div class="fill status-risk" style="--fill:40;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">6/15</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">Projects</span>
+          <div class="track" style="flex:1;"><div class="fill status-risk" style="--fill:38;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">38/100</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">State policy</span>
+          <div class="track" style="flex:1;"><div class="fill status-risk" style="--fill:33;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">1/3</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="flex:0 0 116px; font-size:12.5px; color:var(--text-muted);">Federal policy</span>
+          <div class="track" style="flex:1;"><div class="fill status-risk" style="--fill:0;"></div></div>
+          <span class="mono" style="flex:0 0 auto; font-size:12px; font-weight:600; white-space:nowrap;">0/1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAL 3: ANNUAL REVIEW -->
+    <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:var(--accent); display:flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="4.5" width="13" height="16" rx="1.6"></rect><path d="M9 4.5V3.6c0-.6.5-1.1 1.1-1.1h3.8c.6 0 1.1.5 1.1 1.1v.9"></path><polyline points="8.7 12.3 10.7 14.3 15.3 9.7"></polyline></svg>
+          </span>
+          <span style="font-size:15px; font-weight:700;">Annual Review</span>
+        </div>
+        <span class="badge badge-neutral">FY2025</span>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:13px;">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="status-dot" style="background:var(--warn);"></span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Political &amp; economic conditions</div>
+            <div style="font-size:12px; color:var(--text-faint);">Shifted &mdash; energy costs and federal posture under review</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="status-dot" style="background:var(--good);"></span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Community needs</div>
+            <div style="font-size:12px; color:var(--text-faint);">Reassessed &mdash; partner survey complete</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="status-dot" style="background:var(--good);"></span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Programs working</div>
+            <div style="font-size:12px; color:var(--text-faint);">On track &mdash; metrics audit underway</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <span class="status-dot" style="background:var(--neutral-status);"></span>
+          <div>
+            <div style="font-size:13px; font-weight:600;">Plan credibility</div>
+            <div style="font-size:12px; color:var(--text-faint);">Pending &mdash; assessment follows Q1&ndash;Q2 findings</div>
+          </div>
+        </div>
+      </div>
+
+      <a href="#" style="font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px; margin-top:2px;">
+        View full 2025 annual review
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+      </a>
+    </div>
+
+    <!-- DIAL 4: ACTIVE GRANT PORTFOLIO -->
+    <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:14px;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:var(--accent); display:flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"></rect><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"></rect><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"></rect><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"></rect></svg>
+          </span>
+          <span style="font-size:15px; font-weight:700;">Active Grant Portfolio</span>
+        </div>
+        <span class="badge badge-accent">Live</span>
+      </div>
+
+      <div class="ptable">
+        <div class="cell hd">Program</div>
+        <div class="cell hd num">BRIGHTspot</div>
+        <div class="cell hd num">Get Ready</div>
+        <div class="cell hd num">FAC</div>
+        <div class="cell hd num">Total</div>
+
+        <div class="cell">Workforce</div>
+        <div class="cell num mono">8</div>
+        <div class="cell num mono">5</div>
+        <div class="cell num mono">3</div>
+        <div class="cell num mono">16</div>
+
+        <div class="cell">Enterprise</div>
+        <div class="cell num mono">6</div>
+        <div class="cell num mono">9</div>
+        <div class="cell num mono">2</div>
+        <div class="cell num mono">17</div>
+
+        <div class="cell">Infrastructure</div>
+        <div class="cell num mono">4</div>
+        <div class="cell num mono">3</div>
+        <div class="cell num mono">1</div>
+        <div class="cell num mono">8</div>
+
+        <div class="cell">Policy</div>
+        <div class="cell num mono">2</div>
+        <div class="cell num mono">1</div>
+        <div class="cell num mono">0</div>
+        <div class="cell num mono">3</div>
+
+        <div class="cell total">Total</div>
+        <div class="cell num mono total">20</div>
+        <div class="cell num mono total">18</div>
+        <div class="cell num mono total">6</div>
+        <div class="cell num mono total">44</div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-top:12px; border-top:1px solid var(--border);">
+        <span style="font-size:12px; color:var(--text-muted);">Potential impact (per proposals)</span>
+        <span class="mono" style="font-size:16px; font-weight:700; color:var(--accent);">$340M</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- NAVIGATION -->
+  <div style="background:var(--surface-alt); border:1px solid var(--border-soft); border-radius:16px; padding:28px;">
+    <div style="font-size:16px; font-weight:700; margin-bottom:4px;">I would like to&hellip;</div>
+    <div style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Choose a starting point to see the relevant data and insights.</div>
+
+    <div class="nav-grid">
+      <button type="button" class="nav-btn">
+        <span style="display:flex; align-items:center; gap:12px;">
+          <span style="display:flex; color:var(--accent);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="2.8"></circle><path d="M3.8 19c.5-3 2.6-4.8 5.2-4.8s4.7 1.8 5.2 4.8"></path><circle cx="16.5" cy="8.8" r="2.2"></circle><path d="M15 14.5c2.1.2 3.7 1.8 4.2 4.5"></path></svg>
+          </span>
+          <span style="font-size:13.5px; font-weight:600;">Ask about one or more grantees</span>
+        </span>
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg></span>
+      </button>
+
+      <button type="button" class="nav-btn">
+        <span style="display:flex; align-items:center; gap:12px;">
+          <span style="display:flex; color:var(--accent);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 3 2 8 12 13 22 8 12 3"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12.5 12 17.5 22 12.5"></polyline></svg>
+          </span>
+          <span style="font-size:13.5px; font-weight:600;">Ask about a program</span>
+        </span>
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg></span>
+      </button>
+
+      <button type="button" class="nav-btn">
+        <span style="display:flex; align-items:center; gap:12px;">
+          <span style="display:flex; color:var(--accent);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"></path><circle cx="12" cy="9.8" r="2.3"></circle></svg>
+          </span>
+          <span style="font-size:13.5px; font-weight:600;">Ask about a geographic region</span>
+        </span>
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg></span>
+      </button>
+
+      <button type="button" class="nav-btn">
+        <span style="display:flex; align-items:center; gap:12px;">
+          <span style="display:flex; color:var(--accent);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="5" y2="12"></line><line x1="12" y1="20" x2="12" y2="6"></line><line x1="19" y1="20" x2="19" y2="15"></line><line x1="3" y1="20" x2="21" y2="20"></line></svg>
+          </span>
+          <span style="font-size:13.5px; font-weight:600;">Ask about our overall impact</span>
+        </span>
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg></span>
+      </button>
+
+      <button type="button" class="nav-btn">
+        <span style="display:flex; align-items:center; gap:12px;">
+          <span style="display:flex; color:var(--accent);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z"></path><polyline points="14 3.5 14 7.5 18 7.5"></polyline><line x1="8.5" y1="12" x2="15.5" y2="12"></line><line x1="8.5" y1="15.5" x2="15.5" y2="15.5"></line></svg>
+          </span>
+          <span style="font-size:13.5px; font-weight:600;">Fill out a funder report</span>
+        </span>
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg></span>
+      </button>
+
+      <button type="button" class="nav-btn">
+        <span style="display:flex; align-items:center; gap:12px;">
+          <span style="display:flex; color:var(--accent);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="1.6"></rect><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"></line><line x1="8" y1="3" x2="8" y2="6.5"></line><line x1="16" y1="3" x2="16" y2="6.5"></line><polyline points="8.3 14.8 10.8 17.2 15.7 12.3"></polyline></svg>
+          </span>
+          <span style="font-size:13.5px; font-weight:600;">Do an annual review</span>
+        </span>
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg></span>
+      </button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
