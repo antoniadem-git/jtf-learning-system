@@ -212,16 +212,36 @@
         </div>
       </div>
 
-      <svg viewBox="0 0 240 90" style="width:100%; height:auto;">
+      <svg viewBox="0 0 240 100" style="width:100%; height:auto;">
         <path d="M 20 65 Q 42.5 41 65 65" fill="none" stroke="var(--accent)" stroke-width="1.6"></path>
         <path d="M 155 65 Q 177.5 41 200 65" fill="none" stroke="var(--accent)" stroke-width="1.6"></path>
         <path d="M 110 65 Q 155 23 200 65" fill="none" stroke="var(--accent)" stroke-width="1.6"></path>
-        <circle cx="20" cy="65" r="5" fill="var(--accent)"></circle>
-        <circle cx="65" cy="65" r="5" fill="var(--accent)"></circle>
-        <circle cx="110" cy="65" r="5" fill="var(--accent)"></circle>
-        <circle cx="155" cy="65" r="5" fill="var(--accent)"></circle>
-        <circle cx="200" cy="65" r="5" fill="var(--accent)"></circle>
+
+        <!-- moved-ahead counts, on each arc -->
+        <text x="42.5" y="46" class="mono" text-anchor="middle" font-size="8" font-weight="700" fill="var(--accent)">3</text>
+        <text x="177.5" y="46" class="mono" text-anchor="middle" font-size="8" font-weight="700" fill="var(--accent)">4</text>
+        <text x="155" y="37" class="mono" text-anchor="middle" font-size="8" font-weight="700" fill="var(--accent)">2</text>
+
+        <!-- stage dots, numbered 1-5 -->
+        <circle cx="20" cy="65" r="7" fill="var(--accent)"></circle>
+        <circle cx="65" cy="65" r="7" fill="var(--accent)"></circle>
+        <circle cx="110" cy="65" r="7" fill="var(--accent)"></circle>
+        <circle cx="155" cy="65" r="7" fill="var(--accent)"></circle>
+        <circle cx="200" cy="65" r="7" fill="var(--accent)"></circle>
+        <text x="20" y="65" class="mono" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="700" fill="var(--surface)">1</text>
+        <text x="65" y="65" class="mono" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="700" fill="var(--surface)">2</text>
+        <text x="110" y="65" class="mono" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="700" fill="var(--surface)">3</text>
+        <text x="155" y="65" class="mono" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="700" fill="var(--surface)">4</text>
+        <text x="200" y="65" class="mono" text-anchor="middle" dominant-baseline="central" font-size="8" font-weight="700" fill="var(--surface)">5</text>
+
+        <!-- stayed-at-stage counts, under each dot -->
+        <text x="20" y="86" class="mono" text-anchor="middle" font-size="9" font-weight="700" fill="var(--text)">4</text>
+        <text x="65" y="86" class="mono" text-anchor="middle" font-size="9" font-weight="700" fill="var(--text)">7</text>
+        <text x="110" y="86" class="mono" text-anchor="middle" font-size="9" font-weight="700" fill="var(--text)">5</text>
+        <text x="155" y="86" class="mono" text-anchor="middle" font-size="9" font-weight="700" fill="var(--text)">6</text>
+        <text x="200" y="86" class="mono" text-anchor="middle" font-size="9" font-weight="700" fill="var(--text)">9</text>
       </svg>
+      <div style="font-size:11px; color:var(--text-faint); margin-top:-8px;">Below each stage: grantees who stayed &middot; on each arc: grantees who advanced</div>
     </div>
 
     <!-- DIAL 1: 2026 GOALS -->
