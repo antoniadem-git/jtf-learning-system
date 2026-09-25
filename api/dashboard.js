@@ -47,10 +47,14 @@ export default async function handler(req, res) {
       })
       .sort((a, b) => a.order - b.order);
 
+    // TEMP: inspect raw Text Summary for Top Three Needs before parsing it.
+    const topNeedsRecord = records.find((rec) => (rec.fields || {})['Metric'] === 'Top Three Needs');
+    const topNeedsRaw = topNeedsRecord ? topNeedsRecord.fields['Text Summary'] : null;
+
     // Cache at Vercel's edge for 60s, serve stale for up to 5min while revalidating,
     // so normal traffic doesn't hammer Airtable's rate limit.
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
-    res.status(200).json({ metrics });
+    res.status(200).json({ metrics, topNeedsRaw });
   } catch (err) {
     res.status(200).json({ metrics: [], error: 'fetch_failed' });
   }
