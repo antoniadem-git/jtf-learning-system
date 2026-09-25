@@ -69,7 +69,8 @@ export default async function handler(req, res) {
 
     grants.forEach((g) => {
       const f = g.fields || {};
-      const org = f['Org Short Name'] || 'Unnamed grantee';
+      const rawOrg = f['Org Short Name'];
+      const org = (Array.isArray(rawOrg) ? rawOrg.join(', ') : rawOrg) || 'Unnamed grantee';
       const latest = latestByGrant[g.id];
       if (!latest) {
         noDataGrants.push({ org });
