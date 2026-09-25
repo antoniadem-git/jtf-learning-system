@@ -306,6 +306,15 @@
           <span style="font-size:15px; font-weight:700;">Field Signal</span>
         </div>
       </div>
+
+      <div data-topneeds>
+        <div style="font-size:13px; font-weight:600; margin-bottom:10px;">Top Needs of the Field:</div>
+        <ol class="topneeds-list" style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px;">
+          <li style="font-size:13px; color:var(--text-muted);">Access to affordable childcare</li>
+          <li style="font-size:13px; color:var(--text-muted);">Workforce training pipelines</li>
+          <li style="font-size:13px; color:var(--text-muted);">Broadband infrastructure</li>
+        </ol>
+      </div>
     </div>
 
     <!-- DIAL 2: 2026-2029 GOALS -->
@@ -486,6 +495,13 @@
         var m = byMetric[el.getAttribute('data-metric')];
         if (m) applyCombinedMetric(el, m);
       });
+
+      if (Array.isArray(data.topNeeds) && data.topNeeds.length > 0) {
+        var items = document.querySelectorAll('[data-topneeds] .topneeds-list li');
+        data.topNeeds.forEach(function (text, i) {
+          if (items[i]) items[i].textContent = text;
+        });
+      }
     })
     .catch(function () {
       // Live fetch failed (token not set up yet, network issue, etc.) —
