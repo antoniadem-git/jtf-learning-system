@@ -4,9 +4,10 @@
 //
 //   denominator = grants with Grant Year = 2026, excluding Status =
 //                 "On Hold (Matching Funds)" and Cycle = "Policy"
-//   numerator   = of those, grants whose most recent check-in
-//                 (by Actual Check-In Date, from the linked Grantee
-//                 Check-in table) has Project Status = "On-track"
+//   numerator   = of those, grants whose most recent COMPLETED check-in
+//                 (Status = "Completed", by Actual Check-In Date, from
+//                 the linked Grantee Check-in table) has Project
+//                 Status = "On-track"
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -45,13 +46,14 @@ export default async function handler(req, res) {
       fetchAll('Grantee Check-in', {}),
     ]);
 
-    // Find the most recent check-in per linked grant record id.
+    // Find the most recent COMPLETED check-in per linked grant record id.
     const latestByGrant = {};
     checkins.forEach((rec) => {
       const f = rec.fields || {};
       const grantIds = f['Grant'] || [];
       const dateStr = f['Actual Check-In Date'];
       if (!dateStr || grantIds.length === 0) return;
+      if (f['Status'] !== 'Completed') return;
       const date = new Date(dateStr);
       grantIds.forEach((gid) => {
         const current = latestByGrant[gid];
