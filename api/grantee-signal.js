@@ -63,17 +63,36 @@ export default async function handler(req, res) {
       });
     });
 
-    let onTrack = 0;
+    const onTrackGrants = [];
+    const atRiskGrants = [];
+    const noDataGrants = [];
+
     grants.forEach((g) => {
+      const f = g.fields || {};
+      const org = f['Org Short Name'] || 'Unnamed grantee';
       const latest = latestByGrant[g.id];
-      if (latest && latest.projectStatus === 'On-track') onTrack += 1;
+      if (!latest) {
+        noDataGrants.push({ org });
+      } else if (latest.projectStatus === 'On-track') {
+        onTrackGrants.push({ org });
+      } else {
+        atRiskGrants.push({ org, projectStatus: latest.projectStatus || null });
+      }
     });
 
+    const onTrack = onTrackGrants.length;
     const total = grants.length;
     const percent = total > 0 ? Math.round((onTrack / total) * 100) : null;
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
-    res.status(200).json({ onTrack, total, percent });
+    res.status(200).json({
+      onTrack,
+      total,
+      percent,
+      onTrackGrants,
+      atRiskGrants,
+      noDataGrants,
+    });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
   }
