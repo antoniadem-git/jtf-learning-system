@@ -185,9 +185,10 @@
         </div>
       </div>
 
-      <div style="text-align:center;">
-        <div class="mono" style="font-size:30px; font-weight:700; color:var(--good);">75%</div>
+      <div style="text-align:center;" data-signal="grantee">
+        <div class="mono signal-pct" style="font-size:30px; font-weight:700; color:var(--good);">75%</div>
         <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">On Track</div>
+        <div class="signal-detail" style="font-size:11px; color:var(--text-faint); margin-top:4px;"></div>
       </div>
     </div>
 
@@ -604,6 +605,21 @@
     .catch(function () {
       // Live fetch failed (token not set up yet, network issue, etc.) —
       // leave the sample data already in the page untouched.
+    });
+
+  fetch('/api/grantee-signal')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (typeof data.percent !== 'number') return;
+      var card = document.querySelector('[data-signal="grantee"]');
+      if (!card) return;
+      var pct = card.querySelector('.signal-pct');
+      var detail = card.querySelector('.signal-detail');
+      if (pct) pct.textContent = data.percent + '%';
+      if (detail) detail.textContent = data.onTrack + ' of ' + data.total + ' grants';
+    })
+    .catch(function () {
+      // leave the sample 75% / On Track shown in the page untouched
     });
 })();
 </script>
