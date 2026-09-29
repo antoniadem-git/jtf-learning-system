@@ -23,6 +23,10 @@
 //                            completed check-in at all; display name
 //                            resolved the same way via the grant's own
 //                            "Organization" link.
+//   Reports Due            = current-year-cohort grants' "Report Due
+//                            Date (from Grant Reports)" values (a
+//                            grant can have several), counted per date
+//                            and sorted chronologically.
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -145,13 +149,20 @@ export default async function handler(req, res) {
     const total = cohort.length;
     const percent = total > 0 ? Math.round((onTrack / total) * 100) : null;
 
-    // TEMP: confirm exact report-related field names on Grants & Services.
-    const debugReportFields = Array.from(
-      new Set(allGrants.flatMap((g) => Object.keys(g.fields || {})))
-    )
-      .filter((k) => /report/i.test(k))
-      .sort();
-    const debugSample = cohort.find((g) => (g.fields || {})['Report Due Date (from Grant Reports)'] !== undefined);
+    // Reports Due: count of report due dates across the current-year
+    // cohort, grouped by date.
+    const countByDate = {};
+    cohort.forEach((g) => {
+      const raw = (g.fields || {})['Report Due Date (from Grant Reports)'];
+      const dates = Array.isArray(raw) ? raw : raw ? [raw] : [];
+      dates.forEach((d) => {
+        if (!d) return;
+        countByDate[d] = (countByDate[d] || 0) + 1;
+      });
+    });
+    const reportsDue = Object.keys(countByDate)
+      .sort()
+      .map((date) => ({ date, count: countByDate[date] }));
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.status(200).json({
@@ -161,8 +172,7 @@ export default async function handler(req, res) {
       onTrackGrants,
       atRiskGrants,
       noDataGrants,
-      debugReportFields,
-      debugSampleReportDueDate: debugSample ? debugSample.fields['Report Due Date (from Grant Reports)'] : 'field not found on any cohort record',
+      reportsDue,
     });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });

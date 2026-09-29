@@ -550,7 +550,7 @@
           </span>
           <span style="font-size:15px; font-weight:700;">Reports Due</span>
         </div>
-        <div class="drill-soon">Coming soon.</div>
+        <ul class="drill-list" id="drill-reports-due"><li class="drill-empty">Loading&hellip;</li></ul>
       </div>
 
     </div>
@@ -638,6 +638,37 @@
     });
   }
 
+  function renderReportsDue(rows) {
+    var el = document.getElementById('drill-reports-due');
+    if (!el) return;
+    el.innerHTML = '';
+    if (!rows || rows.length === 0) {
+      var empty = document.createElement('li');
+      empty.className = 'drill-empty';
+      empty.textContent = 'None right now.';
+      el.appendChild(empty);
+      return;
+    }
+    rows.forEach(function (row) {
+      var li = document.createElement('li');
+      var d = new Date(row.date + 'T00:00:00');
+      var label = isNaN(d.getTime())
+        ? row.date
+        : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      li.style.display = 'flex';
+      li.style.justifyContent = 'space-between';
+      var dateSpan = document.createElement('span');
+      dateSpan.textContent = label;
+      var countSpan = document.createElement('span');
+      countSpan.className = 'mono';
+      countSpan.style.fontWeight = '600';
+      countSpan.textContent = row.count + (row.count === 1 ? ' report' : ' reports');
+      li.appendChild(dateSpan);
+      li.appendChild(countSpan);
+      el.appendChild(li);
+    });
+  }
+
   fetch('/api/grantee-signal')
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -653,11 +684,13 @@
       renderDrillList('drill-on-track', data.onTrackGrants);
       renderDrillList('drill-at-risk', data.atRiskGrants);
       renderDrillList('drill-no-data', data.noDataGrants);
+      renderReportsDue(data.reportsDue);
     })
     .catch(function () {
       renderDrillList('drill-on-track', null);
       renderDrillList('drill-at-risk', null);
       renderDrillList('drill-no-data', null);
+      renderReportsDue(null);
     });
 
   var drilldown = document.getElementById('grantee-signal-drilldown');
