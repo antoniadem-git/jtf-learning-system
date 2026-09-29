@@ -121,8 +121,12 @@ export default async function handler(req, res) {
       new Set(checkins.flatMap((r) => Object.keys(r.fields || {})))
     ).sort();
     const debugSample = checkins.find((r) => (r.fields || {})['Grant Year (from Grant)'] !== undefined);
+    const debugGrantYearSamples = allGrants.slice(0, 5).map((g) => ({
+      value: (g.fields || {})['Grant Year'],
+      type: typeof (g.fields || {})['Grant Year'],
+    }));
 
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 'no-store'); // TEMP while debugging
     res.status(200).json({
       onTrack,
       total,
@@ -132,6 +136,8 @@ export default async function handler(req, res) {
       noDataGrants,
       debugCheckinFields,
       debugSampleGrantYear: debugSample ? debugSample.fields['Grant Year (from Grant)'] : null,
+      debugGrantYearSamples,
+      debugAllGrantsCount: allGrants.length,
     });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
