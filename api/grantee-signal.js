@@ -1,13 +1,18 @@
 // Serverless function (runs on Vercel's servers, never in the browser).
-// Computes the "Grantee Signal" On Track percentage from the
-// Contacts & Grants base:
+// Computes the "Grantee Signal" On Track percentage, plus the three
+// drill-down lists, from the Contacts & Grants base:
 //
-//   denominator = grants with Grant Year = 2026, excluding Status =
-//                 "On Hold (Matching Funds)" and Cycle = "Policy"
-//   numerator   = of those, grants whose most recent COMPLETED check-in
-//                 (Status = "Completed", by Actual Check-In Date, from
-//                 the linked Grantee Check-in table) has Project
-//                 Status = "On-track"
+//   percent (2026 cohort)  = grants with Grant Year = 2026, excluding
+//                            Status = "On Hold (Matching Funds)" and
+//                            Cycle = "Policy"; numerator = of those,
+//                            grants whose most recent COMPLETED
+//                            check-in has Project Status = "On-track"
+//   On Track / At Risk list = driven directly by the Grantee Check-in
+//                            table: every grant with a completed
+//                            check-in, any year, bucketed by that
+//                            check-in's Project Status
+//   No Data list           = 2026-cohort grants with no completed
+//                            check-in at all
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -37,16 +42,30 @@ export default async function handler(req, res) {
     return records;
   }
 
-  try {
-    const grantFormula =
-      'AND({Grant Year}="2026",NOT({Status}="On Hold (Matching Funds)"),NOT(ARRAYJOIN({Cycle (from Proposal)})="Policy"))';
+  function orgNameOf(fields) {
+    const raw = fields['Org Short Name'];
+    return (Array.isArray(raw) ? raw.join(', ') : raw) || 'Unnamed grantee';
+  }
 
-    const [grants, checkins] = await Promise.all([
-      fetchAll('Grants & Services', { filterByFormula: grantFormula }),
+  function isPolicyCycle(fields) {
+    const c = fields['Cycle (from Proposal)'];
+    const joined = Array.isArray(c) ? c.join(',') : c || '';
+    return joined === 'Policy';
+  }
+
+  try {
+    const [allGrants, checkins] = await Promise.all([
+      fetchAll('Grants & Services', {}),
       fetchAll('Grantee Check-in', {}),
     ]);
 
-    // Find the most recent COMPLETED check-in per linked grant record id.
+    const orgByGrantId = {};
+    allGrants.forEach((g) => {
+      orgByGrantId[g.id] = orgNameOf(g.fields || {});
+    });
+
+    // Find the most recent COMPLETED check-in per linked grant record id,
+    // across the full Grantee Check-in table (any grant, any year).
     const latestByGrant = {};
     checkins.forEach((rec) => {
       const f = rec.fields || {};
@@ -63,26 +82,38 @@ export default async function handler(req, res) {
       });
     });
 
+    // On Track / At Risk lists: every grant the check-in table knows
+    // about, bucketed by its latest completed check-in's Project Status.
     const onTrackGrants = [];
     const atRiskGrants = [];
-    const noDataGrants = [];
-
-    grants.forEach((g) => {
-      const f = g.fields || {};
-      const rawOrg = f['Org Short Name'];
-      const org = (Array.isArray(rawOrg) ? rawOrg.join(', ') : rawOrg) || 'Unnamed grantee';
-      const latest = latestByGrant[g.id];
-      if (!latest) {
-        noDataGrants.push({ org });
-      } else if (latest.projectStatus === 'On-track') {
+    Object.keys(latestByGrant).forEach((gid) => {
+      const { projectStatus } = latestByGrant[gid];
+      const org = orgByGrantId[gid] || 'Unnamed grantee';
+      if (projectStatus === 'On-track') {
         onTrackGrants.push({ org });
       } else {
-        atRiskGrants.push({ org, projectStatus: latest.projectStatus || null });
+        atRiskGrants.push({ org, projectStatus: projectStatus || null });
       }
     });
 
-    const onTrack = onTrackGrants.length;
-    const total = grants.length;
+    // 2026 cohort (drives the percentage and the No Data list).
+    const cohort2026 = allGrants.filter((g) => {
+      const f = g.fields || {};
+      return (
+        f['Grant Year'] === '2026' &&
+        f['Status'] !== 'On Hold (Matching Funds)' &&
+        !isPolicyCycle(f)
+      );
+    });
+
+    const noDataGrants = cohort2026
+      .filter((g) => !latestByGrant[g.id])
+      .map((g) => ({ org: orgByGrantId[g.id] || 'Unnamed grantee' }));
+
+    const onTrack = cohort2026.filter(
+      (g) => latestByGrant[g.id] && latestByGrant[g.id].projectStatus === 'On-track'
+    ).length;
+    const total = cohort2026.length;
     const percent = total > 0 ? Math.round((onTrack / total) * 100) : null;
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');

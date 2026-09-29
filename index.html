@@ -103,6 +103,10 @@
   .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
   @media (max-width: 880px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
+  .drilldown-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 980px) { .drilldown-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .drilldown-grid { grid-template-columns: 1fr; } }
+
   .nav-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   @media (max-width: 720px) { .nav-grid { grid-template-columns: 1fr; } }
 
@@ -481,7 +485,7 @@
       <p style="max-width:640px; color:var(--text-muted); font-size:14px; line-height:1.55; margin:6px 0 0;">A closer look at the 2026 grant portfolio behind the On Track percentage.</p>
     </div>
 
-    <div class="dashboard-grid">
+    <div class="drilldown-grid">
 
       <!-- ON TRACK GRANTS -->
       <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
