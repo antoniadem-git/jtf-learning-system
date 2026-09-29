@@ -116,6 +116,12 @@ export default async function handler(req, res) {
     const total = cohort2026.length;
     const percent = total > 0 ? Math.round((onTrack / total) * 100) : null;
 
+    // TEMP: confirm exact check-in field names before wiring the year filter.
+    const debugCheckinFields = Array.from(
+      new Set(checkins.flatMap((r) => Object.keys(r.fields || {})))
+    ).sort();
+    const debugSample = checkins.find((r) => (r.fields || {})['Grant Year (from Grant)'] !== undefined);
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.status(200).json({
       onTrack,
@@ -124,6 +130,8 @@ export default async function handler(req, res) {
       onTrackGrants,
       atRiskGrants,
       noDataGrants,
+      debugCheckinFields,
+      debugSampleGrantYear: debugSample ? debugSample.fields['Grant Year (from Grant)'] : null,
     });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
