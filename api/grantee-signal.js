@@ -93,11 +93,10 @@ export default async function handler(req, res) {
       if (!dateStr || grantIds.length === 0) return;
 
       const date = new Date(dateStr);
-      const org = flatten(f['Organization (from Grant)']) || 'Unnamed grantee';
       grantIds.forEach((gid) => {
         const current = latestByGrant[gid];
         if (!current || date > current.date) {
-          latestByGrant[gid] = { date, projectStatus: f['Project Status'], org };
+          latestByGrant[gid] = { date, projectStatus: f['Project Status'] };
         }
       });
     });
@@ -107,7 +106,8 @@ export default async function handler(req, res) {
     const onTrackGrants = [];
     const atRiskGrants = [];
     Object.keys(latestByGrant).forEach((gid) => {
-      const { projectStatus, org } = latestByGrant[gid];
+      const { projectStatus } = latestByGrant[gid];
+      const org = orgByGrantId[gid] || 'Unnamed grantee';
       if (projectStatus === 'On-track') {
         onTrackGrants.push({ org });
       } else {
