@@ -1,18 +1,25 @@
 // Serverless function (runs on Vercel's servers, never in the browser).
 // Computes the "Grantee Signal" On Track percentage, plus the three
-// drill-down lists, from the Contacts & Grants base:
+// drill-down lists, from the Contacts & Grants base. Everything below
+// is scoped to the CURRENT calendar year, computed dynamically so it
+// rolls over automatically each January:
 //
-//   percent (2026 cohort)  = grants with Grant Year = 2026, excluding
+//   percent (current-year cohort) = Grants & Services records with
+//                            Grant Year = current year, excluding
 //                            Status = "On Hold (Matching Funds)" and
 //                            Cycle = "Policy"; numerator = of those,
 //                            grants whose most recent COMPLETED
 //                            check-in has Project Status = "On-track"
 //   On Track / At Risk list = driven directly by the Grantee Check-in
-//                            table: every grant with a completed
-//                            check-in, any year, bucketed by that
-//                            check-in's Project Status
-//   No Data list           = 2026-cohort grants with no completed
-//                            check-in at all
+//                            table: check-ins whose own "Grant Year
+//                            (from Grant)" is the current year,
+//                            Status = "Completed", bucketed by the
+//                            most recent one's Project Status per
+//                            grant. Display name comes from each
+//                            check-in's own "Organization (from
+//                            Grant)" field.
+//   No Data list           = current-year-cohort grants with no
+//                            completed check-in at all
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -42,6 +49,10 @@ export default async function handler(req, res) {
     return records;
   }
 
+  function flatten(value) {
+    return Array.isArray(value) ? value[0] : value;
+  }
+
   function orgNameOf(fields) {
     const raw = fields['Org Short Name'];
     return (Array.isArray(raw) ? raw.join(', ') : raw) || 'Unnamed grantee';
@@ -52,6 +63,8 @@ export default async function handler(req, res) {
     const joined = Array.isArray(c) ? c.join(',') : c || '';
     return joined === 'Policy';
   }
+
+  const currentYear = new Date().getFullYear();
 
   try {
     const [allGrants, checkins] = await Promise.all([
@@ -64,31 +77,37 @@ export default async function handler(req, res) {
       orgByGrantId[g.id] = orgNameOf(g.fields || {});
     });
 
-    // Find the most recent COMPLETED check-in per linked grant record id,
-    // across the full Grantee Check-in table (any grant, any year).
+    // Latest COMPLETED, current-year check-in per linked grant record id,
+    // read directly off the Grantee Check-in table's own "Grant Year
+    // (from Grant)" field (not the Grants & Services cohort).
     const latestByGrant = {};
     checkins.forEach((rec) => {
       const f = rec.fields || {};
+      if (f['Status'] !== 'Completed') return;
+
+      const grantYear = Number(flatten(f['Grant Year (from Grant)']));
+      if (grantYear !== currentYear) return;
+
       const grantIds = f['Grant'] || [];
       const dateStr = f['Actual Check-In Date'];
       if (!dateStr || grantIds.length === 0) return;
-      if (f['Status'] !== 'Completed') return;
+
       const date = new Date(dateStr);
+      const org = flatten(f['Organization (from Grant)']) || 'Unnamed grantee';
       grantIds.forEach((gid) => {
         const current = latestByGrant[gid];
         if (!current || date > current.date) {
-          latestByGrant[gid] = { date, projectStatus: f['Project Status'] };
+          latestByGrant[gid] = { date, projectStatus: f['Project Status'], org };
         }
       });
     });
 
-    // On Track / At Risk lists: every grant the check-in table knows
-    // about, bucketed by its latest completed check-in's Project Status.
+    // On Track / At Risk lists: current-year grants the check-in table
+    // knows about, bucketed by their latest check-in's Project Status.
     const onTrackGrants = [];
     const atRiskGrants = [];
     Object.keys(latestByGrant).forEach((gid) => {
-      const { projectStatus } = latestByGrant[gid];
-      const org = orgByGrantId[gid] || 'Unnamed grantee';
+      const { projectStatus, org } = latestByGrant[gid];
       if (projectStatus === 'On-track') {
         onTrackGrants.push({ org });
       } else {
@@ -96,37 +115,27 @@ export default async function handler(req, res) {
       }
     });
 
-    // 2026 cohort (drives the percentage and the No Data list).
-    const cohort2026 = allGrants.filter((g) => {
+    // Current-year cohort (drives the percentage and the No Data list).
+    const cohort = allGrants.filter((g) => {
       const f = g.fields || {};
       return (
-        f['Grant Year'] === '2026' &&
+        Number(f['Grant Year']) === currentYear &&
         f['Status'] !== 'On Hold (Matching Funds)' &&
         !isPolicyCycle(f)
       );
     });
 
-    const noDataGrants = cohort2026
+    const noDataGrants = cohort
       .filter((g) => !latestByGrant[g.id])
       .map((g) => ({ org: orgByGrantId[g.id] || 'Unnamed grantee' }));
 
-    const onTrack = cohort2026.filter(
+    const onTrack = cohort.filter(
       (g) => latestByGrant[g.id] && latestByGrant[g.id].projectStatus === 'On-track'
     ).length;
-    const total = cohort2026.length;
+    const total = cohort.length;
     const percent = total > 0 ? Math.round((onTrack / total) * 100) : null;
 
-    // TEMP: confirm exact check-in field names before wiring the year filter.
-    const debugCheckinFields = Array.from(
-      new Set(checkins.flatMap((r) => Object.keys(r.fields || {})))
-    ).sort();
-    const debugSample = checkins.find((r) => (r.fields || {})['Grant Year (from Grant)'] !== undefined);
-    const debugGrantYearSamples = allGrants.slice(0, 5).map((g) => ({
-      value: (g.fields || {})['Grant Year'],
-      type: typeof (g.fields || {})['Grant Year'],
-    }));
-
-    res.setHeader('Cache-Control', 'no-store'); // TEMP while debugging
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.status(200).json({
       onTrack,
       total,
@@ -134,10 +143,6 @@ export default async function handler(req, res) {
       onTrackGrants,
       atRiskGrants,
       noDataGrants,
-      debugCheckinFields,
-      debugSampleGrantYear: debugSample ? debugSample.fields['Grant Year (from Grant)'] : null,
-      debugGrantYearSamples,
-      debugAllGrantsCount: allGrants.length,
     });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
