@@ -15,11 +15,14 @@
 //                            (from Grant)" is the current year,
 //                            Status = "Completed", bucketed by the
 //                            most recent one's Project Status per
-//                            grant. Display name comes from each
-//                            check-in's own "Organization (from
-//                            Grant)" field.
+//                            grant. Display name resolved from each
+//                            check-in's "Organization (from Grant)"
+//                            link against the Organizations table's
+//                            "Org Name" field.
 //   No Data list           = current-year-cohort grants with no
-//                            completed check-in at all
+//                            completed check-in at all; display name
+//                            resolved the same way via the grant's own
+//                            "Organization" link.
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -53,11 +56,6 @@ export default async function handler(req, res) {
     return Array.isArray(value) ? value[0] : value;
   }
 
-  function orgNameOf(fields) {
-    const raw = fields['Org Short Name'];
-    return (Array.isArray(raw) ? raw.join(', ') : raw) || 'Unnamed grantee';
-  }
-
   function isPolicyCycle(fields) {
     const c = fields['Cycle (from Proposal)'];
     const joined = Array.isArray(c) ? c.join(',') : c || '';
@@ -67,14 +65,26 @@ export default async function handler(req, res) {
   const currentYear = new Date().getFullYear();
 
   try {
-    const [allGrants, checkins] = await Promise.all([
+    const [allGrants, checkins, organizations] = await Promise.all([
       fetchAll('Grants & Services', {}),
       fetchAll('Grantee Check-in', {}),
+      fetchAll('Organizations', {}),
     ]);
 
+    const orgNameById = {};
+    organizations.forEach((org) => {
+      orgNameById[org.id] = (org.fields || {})['Org Name'];
+    });
+
+    function resolveOrg(linkValue) {
+      const id = flatten(linkValue);
+      return (id && orgNameById[id]) || 'Unnamed grantee';
+    }
+
+    // Grant record id -> org name, via each grant's own "Organization" link.
     const orgByGrantId = {};
     allGrants.forEach((g) => {
-      orgByGrantId[g.id] = orgNameOf(g.fields || {});
+      orgByGrantId[g.id] = resolveOrg((g.fields || {})['Organization']);
     });
 
     // Latest COMPLETED, current-year check-in per linked grant record id,
@@ -93,10 +103,11 @@ export default async function handler(req, res) {
       if (!dateStr || grantIds.length === 0) return;
 
       const date = new Date(dateStr);
+      const org = resolveOrg(f['Organization (from Grant)']);
       grantIds.forEach((gid) => {
         const current = latestByGrant[gid];
         if (!current || date > current.date) {
-          latestByGrant[gid] = { date, projectStatus: f['Project Status'] };
+          latestByGrant[gid] = { date, projectStatus: f['Project Status'], org };
         }
       });
     });
@@ -106,8 +117,7 @@ export default async function handler(req, res) {
     const onTrackGrants = [];
     const atRiskGrants = [];
     Object.keys(latestByGrant).forEach((gid) => {
-      const { projectStatus } = latestByGrant[gid];
-      const org = orgByGrantId[gid] || 'Unnamed grantee';
+      const { projectStatus, org } = latestByGrant[gid];
       if (projectStatus === 'On-track') {
         onTrackGrants.push({ org });
       } else {
