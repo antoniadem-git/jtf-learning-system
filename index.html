@@ -342,6 +342,11 @@
           <li style="font-size:13px; color:var(--text-muted);">Broadband infrastructure</li>
         </ol>
       </div>
+
+      <a href="#" id="field-signal-more-details" style="font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px; margin-top:2px;">
+        More Details
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+      </a>
     </div>
 
     <!-- DIAL 2: 2026-2029 GOALS -->
@@ -557,6 +562,23 @@
   </div>
 </div>
 
+<!-- FIELD SIGNAL DRILL-DOWN -->
+<div class="drilldown-overlay" id="field-signal-drilldown" hidden>
+  <div class="wrap" style="padding-top:32px;">
+    <button type="button" class="drilldown-back" id="field-signal-drilldown-close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="11 18 5 12 11 6"></polyline></svg>
+      Back to dashboard
+    </button>
+
+    <div style="margin:12px 0 28px;">
+      <div style="font-size:22px; font-weight:700;">Field Signal</div>
+      <p style="max-width:640px; color:var(--text-muted); font-size:14px; line-height:1.55; margin:6px 0 0;">A closer look at the needs and conditions reported from the field.</p>
+    </div>
+
+    <div class="drill-soon">Coming soon &mdash; sections to be defined.</div>
+  </div>
+</div>
+
 <script>
 (function () {
   function fmt(prefix, value, suffix) {
@@ -693,33 +715,43 @@
       renderReportsDue(null);
     });
 
-  var drilldown = document.getElementById('grantee-signal-drilldown');
-  var trigger = document.getElementById('grantee-signal-card');
-  var closeBtn = document.getElementById('drilldown-close');
+  var openDrilldowns = [];
 
-  function openDrilldown() {
-    drilldown.hidden = false;
-    document.body.style.overflow = 'hidden';
-    closeBtn.focus();
-  }
-  function closeDrilldown() {
-    drilldown.hidden = true;
-    document.body.style.overflow = '';
-    trigger.focus();
-  }
+  function setupDrilldown(triggerId, overlayId, closeBtnId) {
+    var trigger = document.getElementById(triggerId);
+    var drilldown = document.getElementById(overlayId);
+    var closeBtn = document.getElementById(closeBtnId);
+    if (!trigger || !drilldown || !closeBtn) return;
 
-  if (trigger) {
-    trigger.addEventListener('click', openDrilldown);
+    function open(e) {
+      if (e) e.preventDefault();
+      drilldown.hidden = false;
+      document.body.style.overflow = 'hidden';
+      closeBtn.focus();
+    }
+    function close() {
+      drilldown.hidden = true;
+      document.body.style.overflow = '';
+      trigger.focus();
+    }
+
+    trigger.addEventListener('click', open);
     trigger.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openDrilldown();
-      }
+      if (e.key === 'Enter' || e.key === ' ') open(e);
     });
+    closeBtn.addEventListener('click', close);
+
+    openDrilldowns.push({ el: drilldown, close: close });
   }
-  if (closeBtn) closeBtn.addEventListener('click', closeDrilldown);
+
+  setupDrilldown('grantee-signal-card', 'grantee-signal-drilldown', 'drilldown-close');
+  setupDrilldown('field-signal-more-details', 'field-signal-drilldown', 'field-signal-drilldown-close');
+
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && drilldown && !drilldown.hidden) closeDrilldown();
+    if (e.key !== 'Escape') return;
+    openDrilldowns.forEach(function (d) {
+      if (!d.el.hidden) d.close();
+    });
   });
 })();
 </script>
