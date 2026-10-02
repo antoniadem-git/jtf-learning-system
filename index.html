@@ -164,6 +164,17 @@
   .drill-empty { font-size: 13px; color: var(--text-faint); font-style: italic; }
   .drill-soon { font-size: 13px; color: var(--text-faint); font-style: italic; }
 
+
+  .card-heading { position: relative; display: flex; align-items: center; justify-content: center; }
+  .card-heading-title { display: flex; align-items: center; gap: 10px; }
+  .card-heading-title svg { width: 24px; height: 24px; }
+  .card-title-text { font-size: 20px; font-weight: 700; color: var(--accent); }
+  .card-heading-badge { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+  @media (max-width: 560px) {
+    .card-heading { flex-direction: column; gap: 8px; }
+    .card-heading-badge { position: static; transform: none; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
@@ -198,12 +209,12 @@
 
     <!-- GRANT SIGNAL -->
     <div class="card drilldown-trigger" id="grantee-signal-card" role="button" tabindex="0" aria-haspopup="true" style="padding:24px; display:flex; flex-direction:column; gap:20px; cursor:pointer;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div style="display:flex; align-items:center; gap:10px;">
+      <div class="card-heading">
+        <div class="card-heading-title">
           <span style="color:var(--accent); display:flex;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16a8 8 0 0 1 16 0"></path><line x1="12" y1="16" x2="15.5" y2="10.5"></line><circle cx="12" cy="16" r="1.3" fill="currentColor" stroke="none"></circle></svg>
           </span>
-          <span style="font-size:15px; font-weight:700;">Grantee Signal</span>
+          <span class="card-title-text">Grantee Signal</span>
         </div>
       </div>
 
@@ -221,12 +232,12 @@
 
     <!-- COHORT PERFORMANCE -->
     <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:20px;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div style="display:flex; align-items:center; gap:10px;">
+      <div class="card-heading">
+        <div class="card-heading-title">
           <span style="color:var(--accent); display:flex;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"></circle><circle cx="19" cy="6" r="1.8" fill="currentColor" stroke="none"></circle><circle cx="19" cy="18" r="1.8" fill="currentColor" stroke="none"></circle><line x1="6.5" y1="11" x2="17.5" y2="7"></line><line x1="6.5" y1="13" x2="17.5" y2="17"></line></svg>
           </span>
-          <span style="font-size:15px; font-weight:700;">Cohort Arc</span>
+          <span class="card-title-text">Cohort Arc</span>
         </div>
       </div>
 
@@ -243,14 +254,14 @@
 
     <!-- DIAL 3: ANNUAL REVIEW -->
     <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div style="display:flex; align-items:center; gap:10px;">
+      <div class="card-heading">
+        <div class="card-heading-title">
           <span style="color:var(--accent); display:flex;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="4.5" width="13" height="16" rx="1.6"></rect><path d="M9 4.5V3.6c0-.6.5-1.1 1.1-1.1h3.8c.6 0 1.1.5 1.1 1.1v.9"></path><polyline points="8.7 12.3 10.7 14.3 15.3 9.7"></polyline></svg>
           </span>
-          <span style="font-size:15px; font-weight:700;">Annual Review</span>
+          <span class="card-title-text">Annual Review</span>
         </div>
-        <span class="badge badge-neutral">FY2025</span>
+        <span class="card-heading-badge badge badge-neutral">FY2025</span>
       </div>
 
       <div style="display:flex; flex-direction:column; gap:13px;">
@@ -292,24 +303,24 @@
 
     <!-- DIAL 1: 2026 GOALS -->
     <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:18px;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div style="display:flex; align-items:center; gap:10px;">
+      <div class="card-heading">
+        <div class="card-heading-title">
           <span style="color:var(--accent); display:flex;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"></circle></svg>
           </span>
-          <span style="font-size:15px; font-weight:700;">Model Validation</span>
+          <span class="card-title-text">Model Validation</span>
         </div>
       </div>
     </div>
 
     <!-- DIAL 4: ACTIVE GRANT PORTFOLIO -->
     <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:14px;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div style="display:flex; align-items:center; gap:10px;">
+      <div class="card-heading">
+        <div class="card-heading-title">
           <span style="color:var(--accent); display:flex;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"></rect><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"></rect><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"></rect><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"></rect></svg>
           </span>
-          <span style="font-size:15px; font-weight:700;">Field Signal</span>
+          <span class="card-title-text">Field Signal</span>
         </div>
       </div>
 
@@ -330,14 +341,14 @@
 
     <!-- DIAL 2: 2026-2029 GOALS -->
     <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
-      <div style="display:flex; align-items:center; justify-content:space-between;">
-        <div style="display:flex; align-items:center; gap:10px;">
+      <div class="card-heading">
+        <div class="card-heading-title">
           <span style="color:var(--accent); display:flex;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 16 9.5 9.5 13.5 13.5 21 6"></polyline><polyline points="14.5 6 21 6 21 12.5"></polyline></svg>
           </span>
-          <span style="font-size:15px; font-weight:700;">Four-Year Campaign</span>
+          <span class="card-title-text">Four-Year Campaign</span>
         </div>
-        <span class="badge badge-accent">Cumulative</span>
+        <span class="card-heading-badge badge badge-accent">Cumulative</span>
       </div>
 
       <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
