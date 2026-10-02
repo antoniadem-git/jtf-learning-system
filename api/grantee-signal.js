@@ -148,6 +148,10 @@ export default async function handler(req, res) {
     ).length;
     const total = cohort.length;
     const percent = total > 0 ? Math.round((onTrack / total) * 100) : null;
+    const noData = noDataGrants.length;
+    const atRisk = total - onTrack - noData;
+    const atRiskPercent = total > 0 ? Math.round((atRisk / total) * 100) : null;
+    const noDataPercent = total > 0 ? Math.round((noData / total) * 100) : null;
 
     // Reports Due: count of report due dates across the current-year
     // cohort, grouped by date.
@@ -169,6 +173,10 @@ export default async function handler(req, res) {
       onTrack,
       total,
       percent,
+      atRisk,
+      noData,
+      atRiskPercent,
+      noDataPercent,
       onTrackGrants,
       atRiskGrants,
       noDataGrants,
