@@ -139,6 +139,8 @@
     .subcols { grid-template-columns: 1fr; }
     .subcols > div:not(:first-child) { border-left: none; padding-left: 0; padding-top: 14px; margin-top: 2px; border-top: 1px solid var(--border); }
   }
+  .subcols.subcols-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 560px) { .subcols.subcols-2 { grid-template-columns: 1fr; } }
   .subcol-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-bottom: 12px; }
   .submetric + .submetric { margin-top: 14px; }
   .submetric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
@@ -251,6 +253,25 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="6" x2="12" y2="7.6"></line><line x1="12" y1="16.4" x2="12" y2="18"></line><path d="M14.6 9.4c-.4-1-1.4-1.6-2.6-1.6-1.5 0-2.6.8-2.6 2s1 1.7 2.6 2 2.6.8 2.6 2-1.1 2-2.6 2c-1.2 0-2.2-.6-2.6-1.6"></path></svg>
           </span>
           <span class="card-title-text">Economic Output</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="submetric" data-metric="Growth generated">
+          <div class="submetric-label">Growth generated</div>
+          <div class="submetric-values">
+            <span class="submetric-current mono">$78M</span>
+            <span class="submetric-target mono">/ $125M</span>
+          </div>
+          <div class="track"><div class="fill status-good" style="--fill:62;"></div></div>
+        </div>
+        <div class="submetric" data-metric="Brightspot candidates">
+          <div class="submetric-label">Brightspot candidates</div>
+          <div class="submetric-values">
+            <span class="submetric-current mono">6</span>
+            <span class="submetric-target mono">/ 10</span>
+          </div>
+          <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
         </div>
       </div>
     </div>
@@ -677,27 +698,7 @@
           <span class="badge badge-accent">Annual</span>
         </div>
 
-        <div class="subcols">
-          <div>
-            <div class="subcol-title">Economic output</div>
-            <div class="submetric" data-metric="Growth generated">
-              <div class="submetric-label">Growth generated</div>
-              <div class="submetric-values">
-                <span class="submetric-current mono">$78M</span>
-                <span class="submetric-target mono">/ $125M</span>
-              </div>
-              <div class="track"><div class="fill status-good" style="--fill:62;"></div></div>
-            </div>
-            <div class="submetric" data-metric="Brightspot candidates">
-              <div class="submetric-label">Brightspot candidates</div>
-              <div class="submetric-values">
-                <span class="submetric-current mono">6</span>
-                <span class="submetric-target mono">/ 10</span>
-              </div>
-              <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
-            </div>
-          </div>
-
+        <div class="subcols subcols-2">
           <div>
             <div class="subcol-title">Readiness</div>
             <div class="submetric" data-metric="Communities advanced">
