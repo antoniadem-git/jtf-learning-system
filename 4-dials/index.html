@@ -139,8 +139,6 @@
     .subcols { grid-template-columns: 1fr; }
     .subcols > div:not(:first-child) { border-left: none; padding-left: 0; padding-top: 14px; margin-top: 2px; border-top: 1px solid var(--border); }
   }
-  .subcols.subcols-2 { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 560px) { .subcols.subcols-2 { grid-template-columns: 1fr; } }
   .subcol-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-bottom: 12px; }
   .submetric + .submetric { margin-top: 14px; }
   .submetric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
@@ -286,6 +284,33 @@
           <span class="card-title-text">Reach</span>
         </div>
       </div>
+
+      <div>
+        <div class="submetric" data-metric="Total communities reached">
+          <div class="submetric-label">Total communities reached</div>
+          <div class="submetric-values">
+            <span class="submetric-current mono">58</span>
+            <span class="submetric-target mono">/ 100</span>
+          </div>
+          <div class="track"><div class="fill status-good" style="--fill:58;"></div></div>
+        </div>
+        <div class="submetric" data-metric="New reached via LEL">
+          <div class="submetric-label">New reached via LEL</div>
+          <div class="submetric-values">
+            <span class="submetric-current mono">12</span>
+            <span class="submetric-target mono">/ 20</span>
+          </div>
+          <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
+        </div>
+        <div class="submetric" data-metric="New reached via TE">
+          <div class="submetric-label">New reached via TE</div>
+          <div class="submetric-values">
+            <span class="submetric-current mono">5</span>
+            <span class="submetric-target mono">/ 8</span>
+          </div>
+          <div class="track"><div class="fill status-good" style="--fill:63;"></div></div>
+        </div>
+      </div>
     </div>
 
     <!-- READINESS -->
@@ -296,6 +321,25 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="21" x2="5" y2="3.5"></line><path d="M5 4h11.5l-2.2 4 2.2 4H5"></path></svg>
           </span>
           <span class="card-title-text">Readiness</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="submetric" data-metric="Communities advanced">
+          <div class="submetric-label">Communities advanced</div>
+          <div class="submetric-values">
+            <span class="submetric-current mono">6</span>
+            <span class="submetric-target mono">/ 10</span>
+          </div>
+          <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
+        </div>
+        <div class="submetric" data-metric="Projects in pipeline">
+          <div class="submetric-label">Projects in pipeline</div>
+          <div class="submetric-values">
+            <span class="submetric-current mono">16</span>
+            <span class="submetric-target mono">/ 25</span>
+          </div>
+          <div class="track"><div class="fill status-good" style="--fill:64;"></div></div>
         </div>
       </div>
     </div>
@@ -685,69 +729,6 @@
     </div>
 
     <div class="dashboard-grid">
-
-      <!-- 2026 GOALS -->
-      <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:18px;">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <span style="color:var(--accent); display:flex;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"></circle></svg>
-            </span>
-            <span style="font-size:15px; font-weight:700;">2026 Goals</span>
-          </div>
-          <span class="badge badge-accent">Annual</span>
-        </div>
-
-        <div class="subcols subcols-2">
-          <div>
-            <div class="subcol-title">Readiness</div>
-            <div class="submetric" data-metric="Communities advanced">
-              <div class="submetric-label">Communities advanced</div>
-              <div class="submetric-values">
-                <span class="submetric-current mono">6</span>
-                <span class="submetric-target mono">/ 10</span>
-              </div>
-              <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
-            </div>
-            <div class="submetric" data-metric="Projects in pipeline">
-              <div class="submetric-label">Projects in pipeline</div>
-              <div class="submetric-values">
-                <span class="submetric-current mono">16</span>
-                <span class="submetric-target mono">/ 25</span>
-              </div>
-              <div class="track"><div class="fill status-good" style="--fill:64;"></div></div>
-            </div>
-          </div>
-
-          <div>
-            <div class="subcol-title">Reach</div>
-            <div class="submetric" data-metric="Total communities reached">
-              <div class="submetric-label">Total communities reached</div>
-              <div class="submetric-values">
-                <span class="submetric-current mono">58</span>
-                <span class="submetric-target mono">/ 100</span>
-              </div>
-              <div class="track"><div class="fill status-good" style="--fill:58;"></div></div>
-            </div>
-            <div class="submetric" data-metric="New reached via LEL">
-              <div class="submetric-label">New reached via LEL</div>
-              <div class="submetric-values">
-                <span class="submetric-current mono">12</span>
-                <span class="submetric-target mono">/ 20</span>
-              </div>
-              <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
-            </div>
-            <div class="submetric" data-metric="New reached via TE">
-              <div class="submetric-label">New reached via TE</div>
-              <div class="submetric-values">
-                <span class="submetric-current mono">5</span>
-                <span class="submetric-target mono">/ 8</span>
-              </div>
-              <div class="track"><div class="fill status-good" style="--fill:63;"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- FOUR-YEAR CAMPAIGN DETAIL -->
       <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
