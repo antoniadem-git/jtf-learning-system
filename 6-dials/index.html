@@ -527,12 +527,14 @@
             <button type="button" class="signal-link" data-grants-target="section-on-track" title="See the on track grants">
               <div id="breakdown-on-track" class="mono" style="font-size:44px; font-weight:700; color:var(--good); line-height:1.1;">75%</div>
               <div class="signal-label" style="font-size:15px; color:var(--text-muted); margin-top:6px;">On Track</div>
+              <div id="breakdown-on-track-detail" style="font-size:12px; color:var(--text-faint); margin-top:4px;"></div>
             </button>
           </div>
           <div>
             <button type="button" class="signal-link" data-grants-target="section-at-risk" title="See the at risk or delayed grants">
               <div id="breakdown-at-risk" class="mono" style="font-size:44px; font-weight:700; color:var(--risk); line-height:1.1;">15%</div>
               <div class="signal-label" style="font-size:15px; color:var(--text-muted); margin-top:6px;">At Risk or Delayed</div>
+              <div id="breakdown-at-risk-detail" style="font-size:12px; color:var(--text-faint); margin-top:4px;"></div>
             </button>
           </div>
         </div>
@@ -747,6 +749,13 @@
     });
   }
 
+  function setBreakdownDetail(id, count, total) {
+    var el = document.getElementById(id);
+    if (el && typeof count === 'number' && typeof total === 'number') {
+      el.textContent = count + ' of ' + total + ' grants';
+    }
+  }
+
   function setBreakdown(id, value) {
     var el = document.getElementById(id);
     if (el && typeof value === 'number') el.textContent = value + '%';
@@ -801,6 +810,8 @@
       renderReportsDue(data.reportsDue);
       setBreakdown('breakdown-on-track', data.percent);
       setBreakdown('breakdown-at-risk', data.atRiskPercent);
+      setBreakdownDetail('breakdown-on-track-detail', data.onTrack, data.total);
+      setBreakdownDetail('breakdown-at-risk-detail', data.atRisk, data.total);
     })
     .catch(function () {
       renderDrillList('drill-on-track', null);
