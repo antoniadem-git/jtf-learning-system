@@ -139,6 +139,8 @@
     .subcols { grid-template-columns: 1fr; }
     .subcols > div:not(:first-child) { border-left: none; padding-left: 0; padding-top: 14px; margin-top: 2px; border-top: 1px solid var(--border); }
   }
+  .subcols.subcols-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 560px) { .subcols.subcols-2 { grid-template-columns: 1fr; } }
   .subcol-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); margin-bottom: 12px; }
   .submetric + .submetric { margin-top: 14px; }
   .submetric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
@@ -520,7 +522,7 @@
           <span style="font-size:15px; font-weight:700;">Signal Breakdown</span>
         </div>
 
-        <div class="subcols">
+        <div class="subcols subcols-2">
           <div>
             <button type="button" class="signal-link" data-grants-target="section-on-track" title="See the on track grants">
               <div id="breakdown-on-track" class="mono" style="font-size:44px; font-weight:700; color:var(--good); line-height:1.1;">75%</div>
@@ -528,15 +530,9 @@
             </button>
           </div>
           <div>
-            <button type="button" class="signal-link" data-grants-target="section-at-risk" title="See the at risk grants">
+            <button type="button" class="signal-link" data-grants-target="section-at-risk" title="See the at risk or delayed grants">
               <div id="breakdown-at-risk" class="mono" style="font-size:44px; font-weight:700; color:var(--risk); line-height:1.1;">15%</div>
-              <div class="signal-label" style="font-size:15px; color:var(--text-muted); margin-top:6px;">At Risk</div>
-            </button>
-          </div>
-          <div>
-            <button type="button" class="signal-link" data-grants-target="section-no-data" title="See the grants with no data">
-              <div id="breakdown-no-data" class="mono" style="font-size:44px; font-weight:700; color:var(--neutral-status); line-height:1.1;">10%</div>
-              <div class="signal-label" style="font-size:15px; color:var(--text-muted); margin-top:6px;">No Data</div>
+              <div class="signal-label" style="font-size:15px; color:var(--text-muted); margin-top:6px;">At Risk or Delayed</div>
             </button>
           </div>
         </div>
@@ -650,7 +646,7 @@
           <span style="color:var(--risk); display:flex;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 L21 19.5 L3 19.5 Z"></path><line x1="12" y1="10" x2="12" y2="14.5"></line><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"></circle></svg>
           </span>
-          <span style="font-size:15px; font-weight:700;">At Risk Grants</span>
+          <span style="font-size:15px; font-weight:700;">At Risk or Delayed Grants</span>
         </div>
         <ul class="drill-list" id="drill-at-risk"><li class="drill-empty">Loading&hellip;</li></ul>
       </div>
@@ -805,7 +801,6 @@
       renderReportsDue(data.reportsDue);
       setBreakdown('breakdown-on-track', data.percent);
       setBreakdown('breakdown-at-risk', data.atRiskPercent);
-      setBreakdown('breakdown-no-data', data.noDataPercent);
     })
     .catch(function () {
       renderDrillList('drill-on-track', null);
