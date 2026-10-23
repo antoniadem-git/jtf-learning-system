@@ -2,31 +2,32 @@
 // Computes the "Grantee Signal" On Track percentage, plus the three
 // drill-down lists, from the Contacts & Grants base. Everything below
 // is scoped to the CURRENT calendar year, computed dynamically so it
-// rolls over automatically each January:
+// rolls over automatically each January, and to the shared grant
+// cohort defined in ./_cohort.js (same rules as /api/economic-output:
+// excludes Policy and Convening cycles and the On Hold (Matching Funds)
+// / On Hold (Future Multi-Year) statuses):
 //
-//   percent (current-year cohort) = Grants & Services records with
-//                            Grant Year = current year, excluding
-//                            Status = "On Hold (Matching Funds)" and
-//                            Cycle = "Policy"; numerator = of those,
-//                            grants whose most recent COMPLETED
-//                            check-in has Project Status = "On-track"
-//   On Track / At Risk list = driven directly by the Grantee Check-in
-//                            table: check-ins whose own "Grant Year
-//                            (from Grant)" is the current year,
-//                            Status = "Completed", bucketed by the
-//                            most recent one's Project Status per
-//                            grant. Display name resolved from each
-//                            check-in's "Organization (from Grant)"
-//                            link against the Organizations table's
-//                            "Org Name" field.
-//   No Data list           = current-year-cohort grants with no
-//                            completed check-in at all; display name
-//                            resolved the same way via the grant's own
-//                            "Organization" link.
-//   Reports Due            = current-year-cohort grants' "Report Due
-//                            Date (from Grant Reports)" values (a
-//                            grant can have several), counted per date
-//                            and sorted chronologically.
+//   percent (current-year cohort) = numerator = cohort grants whose
+//                            most recent COMPLETED check-in has
+//                            Project Status = "On-track"
+//   On Track / At Risk list = driven by the Grantee Check-in table:
+//                            check-ins whose own "Grant Year (from
+//                            Grant)" is the current year, Status =
+//                            "Completed", for cohort grants only,
+//                            bucketed by the most recent one's Project
+//                            Status per grant. Display name resolved
+//                            from each check-in's "Organization (from
+//                            Grant)" link against the Organizations
+//                            table's "Org Name" field.
+//   No Data list           = cohort grants with no completed check-in
+//                            at all; display name resolved the same way
+//                            via the grant's own "Organization" link.
+//   Reports Due            = cohort grants' "Report Due Date (from
+//                            Grant Reports)" values (a grant can have
+//                            several), counted per date and sorted
+//                            chronologically.
+
+import { isCohortGrant } from './_cohort.js';
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -58,12 +59,6 @@ export default async function handler(req, res) {
 
   function flatten(value) {
     return Array.isArray(value) ? value[0] : value;
-  }
-
-  function isPolicyCycle(fields) {
-    const c = fields['Cycle (from Proposal)'];
-    const joined = Array.isArray(c) ? c.join(',') : c || '';
-    return joined === 'Policy';
   }
 
   const currentYear = new Date().getFullYear();
@@ -116,27 +111,23 @@ export default async function handler(req, res) {
       });
     });
 
-    // On Track / At Risk lists: current-year grants the check-in table
-    // knows about, bucketed by their latest check-in's Project Status.
+    // Current-year cohort (drives the percentage, the No Data list, and
+    // which grants may appear in the On Track / At Risk lists).
+    const cohort = allGrants.filter((g) => isCohortGrant(g.fields || {}, currentYear));
+    const cohortIds = new Set(cohort.map((g) => g.id));
+
+    // On Track / At Risk lists: cohort grants the check-in table knows
+    // about, bucketed by their latest check-in's Project Status.
     const onTrackGrants = [];
     const atRiskGrants = [];
     Object.keys(latestByGrant).forEach((gid) => {
+      if (!cohortIds.has(gid)) return;
       const { projectStatus, org } = latestByGrant[gid];
       if (projectStatus === 'On-track') {
         onTrackGrants.push({ org });
       } else {
         atRiskGrants.push({ org, projectStatus: projectStatus || null });
       }
-    });
-
-    // Current-year cohort (drives the percentage and the No Data list).
-    const cohort = allGrants.filter((g) => {
-      const f = g.fields || {};
-      return (
-        Number(f['Grant Year']) === currentYear &&
-        f['Status'] !== 'On Hold (Matching Funds)' &&
-        !isPolicyCycle(f)
-      );
     });
 
     const noDataGrants = cohort
