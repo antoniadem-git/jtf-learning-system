@@ -687,8 +687,6 @@
     if (target) target.textContent = '/ ' + fmt(data.prefix, data.target, data.suffix);
     if (fill) {
       fill.style.setProperty('--fill', clampPct(data.current, data.target));
-      fill.classList.remove('status-good', 'status-risk');
-      fill.classList.add(data.status === 'At Risk' ? 'status-risk' : 'status-good');
     }
   }
 
@@ -699,8 +697,6 @@
     if (value) value.textContent = fmt(data.prefix, data.current, data.suffix) + '/' + fmt(data.prefix, data.target, data.suffix);
     if (fill) {
       fill.style.setProperty('--fill', clampPct(data.current, data.target));
-      fill.classList.remove('status-good', 'status-risk');
-      fill.classList.add(data.status === 'At Risk' ? 'status-risk' : 'status-good');
     }
   }
 
