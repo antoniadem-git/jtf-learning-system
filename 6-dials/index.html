@@ -704,6 +704,27 @@
     }
   }
 
+  // "Growth generated" amount comes from summed Grant Impact Data economic
+  // output; the target (and unit suffix) still come from the Dashboard
+  // Metrics row, so the bar is drawn once both responses are in.
+  var growthMeta = null;
+  var growthDollars = null;
+
+  function applyGrowthGenerated() {
+    if (!growthMeta || growthDollars === null) return;
+    var el = document.querySelector('.submetric[data-metric="Growth generated"]');
+    if (!el) return;
+    var unit = { K: 1e3, M: 1e6, B: 1e9 }[growthMeta.suffix] || 1;
+    var scaled = growthDollars / unit;
+    var text = unit === 1
+      ? Math.round(scaled).toLocaleString('en-US')
+      : String(Math.round(scaled * 10) / 10);
+    var current = el.querySelector('.submetric-current');
+    var fill = el.querySelector('.fill');
+    if (current) current.textContent = (growthMeta.prefix || '') + text + (growthMeta.suffix || '');
+    if (fill) fill.style.setProperty('--fill', clampPct(scaled, growthMeta.target));
+  }
+
   fetch('/api/dashboard')
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -719,6 +740,9 @@
         if (m) applyCombinedMetric(el, m);
       });
 
+      growthMeta = byMetric['Growth generated'] || null;
+      applyGrowthGenerated();
+
       if (Array.isArray(data.topNeeds) && data.topNeeds.length > 0) {
         var items = document.querySelectorAll('[data-topneeds] .topneeds-list li');
         data.topNeeds.forEach(function (text, i) {
@@ -729,6 +753,17 @@
     .catch(function () {
       // Live fetch failed (token not set up yet, network issue, etc.) —
       // leave the sample data already in the page untouched.
+    });
+
+  fetch('/api/economic-output')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (typeof data.dollars !== 'number') return;
+      growthDollars = data.dollars;
+      applyGrowthGenerated();
+    })
+    .catch(function () {
+      // leave the Dashboard Metrics value in place
     });
 
   function renderDrillList(listId, grants) {
