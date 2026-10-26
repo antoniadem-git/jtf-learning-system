@@ -22,9 +22,11 @@
 //   No Data list           = cohort grants with no completed check-in
 //                            at all; display name resolved the same way
 //                            via the grant's own "Organization" link.
-//   Reports Due            = cohort grants' "Report Due Date (from
-//                            Grant Reports)" values (a grant can have
-//                            several), counted per date and sorted
+//   Reports Due            = report records in the "Grant Reports"
+//                            table linked to cohort grants whose
+//                            "Report Received Date" is empty (received
+//                            reports are excluded), counted per
+//                            "Report Due Date" and sorted
 //                            chronologically.
 
 import { isCohortGrant } from './_cohort.js';
@@ -64,10 +66,11 @@ export default async function handler(req, res) {
   const currentYear = new Date().getFullYear();
 
   try {
-    const [allGrants, checkins, organizations] = await Promise.all([
+    const [allGrants, checkins, organizations, grantReports] = await Promise.all([
       fetchAll('Grants & Services', {}),
       fetchAll('Grantee Check-in', {}),
       fetchAll('Organizations', {}),
+      fetchAll('Grant Reports', {}),
     ]);
 
     const orgNameById = {};
@@ -144,16 +147,17 @@ export default async function handler(req, res) {
     const atRiskPercent = total > 0 ? Math.round((atRisk / total) * 100) : null;
     const noDataPercent = total > 0 ? Math.round((noData / total) * 100) : null;
 
-    // Reports Due: count of report due dates across the current-year
-    // cohort, grouped by date.
+    // Reports Due: outstanding reports (no Report Received Date) for the
+    // current-year cohort, counted per due date.
     const countByDate = {};
-    cohort.forEach((g) => {
-      const raw = (g.fields || {})['Report Due Date (from Grant Reports)'];
-      const dates = Array.isArray(raw) ? raw : raw ? [raw] : [];
-      dates.forEach((d) => {
-        if (!d) return;
-        countByDate[d] = (countByDate[d] || 0) + 1;
-      });
+    grantReports.forEach((rep) => {
+      const f = rep.fields || {};
+      if (f['Report Received Date']) return;
+      const dueDate = f['Report Due Date'];
+      if (!dueDate) return;
+      const linkedGrants = f['Grant Id'] || [];
+      if (!linkedGrants.some((gid) => cohortIds.has(gid))) return;
+      countByDate[dueDate] = (countByDate[dueDate] || 0) + 1;
     });
     const reportsDue = Object.keys(countByDate)
       .sort()
