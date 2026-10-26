@@ -383,6 +383,12 @@
           <div class="track"><div class="fill status-good" style="--fill:63;"></div></div>
         </div>
       </div>
+
+      <div data-total-reach style="text-align:center; border-top:1px solid var(--border); padding-top:16px;">
+        <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);">Total Reach</div>
+        <div class="mono total-reach-pct" style="font-size:30px; font-weight:700; color:var(--accent); margin-top:4px;">70%</div>
+        <div class="total-reach-detail" style="font-size:12px; color:var(--text-muted); margin-top:4px;">262 of 372 counties</div>
+      </div>
     </div>
 
     <!-- DIAL 3: ANNUAL REVIEW -->
@@ -927,6 +933,14 @@
     .then(function (data) {
       var byMetric = {};
       (data.metrics || []).forEach(function (m) { byMetric[m.metric] = m; });
+
+      if (data.totalReach) {
+        var tr = document.querySelector('[data-total-reach]');
+        if (tr) {
+          tr.querySelector('.total-reach-pct').textContent = data.totalReach.percent + '%';
+          tr.querySelector('.total-reach-detail').textContent = data.totalReach.reached + ' of 372 counties';
+        }
+      }
 
       document.querySelectorAll('.submetric[data-metric]').forEach(function (el) {
         var m = byMetric[el.getAttribute('data-metric')];

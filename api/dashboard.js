@@ -46,6 +46,22 @@ async function fetchReachCounts(token) {
   };
 }
 
+// Total Reach: single record in the Reach Summary table. Reach Percentage is
+// stored as a fraction (0.70 = 70%).
+async function fetchTotalReach(token) {
+  const url = new URL(`https://api.airtable.com/v0/${COUNTY_BASE_ID}/${encodeURIComponent('Reach Summary')}`);
+  url.searchParams.set('pageSize', '1');
+  ['Reach Percentage', 'Counties Reached Count'].forEach((f) => url.searchParams.append('fields[]', f));
+  const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!r.ok) throw new Error(`Reach Summary responded ${r.status}`);
+  const data = await r.json();
+  const f = (data.records[0] && data.records[0].fields) || {};
+  const fraction = Number(f['Reach Percentage']);
+  const reached = Number(f['Counties Reached Count']);
+  if (!Number.isFinite(fraction) || !Number.isFinite(reached)) throw new Error('Reach Summary values missing');
+  return { percent: Math.round(fraction * 100), reached };
+}
+
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
   const baseId = process.env.AIRTABLE_BASE_ID || 'appW88cboHe8nuhwK';
@@ -78,12 +94,12 @@ export default async function handler(req, res) {
     // whatever is in the Dashboard Metrics table.
     // Opt-in (?reach=county) so only pages that ask for it switch sources.
     let reach = null;
+    let totalReach = null;
     if (req.query && req.query.reach === 'county') {
-      try {
-        reach = await fetchReachCounts(token);
-      } catch (e) {
-        reach = null;
-      }
+      [reach, totalReach] = await Promise.all([
+        fetchReachCounts(token).catch(() => null),
+        fetchTotalReach(token).catch(() => null),
+      ]);
     }
 
     const metrics = records
@@ -128,7 +144,13 @@ export default async function handler(req, res) {
     // Cache at Vercel's edge for 60s, serve stale for up to 5min while revalidating,
     // so normal traffic doesn't hammer Airtable's rate limit.
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
-    res.status(200).json({ metrics, topNeeds, checkinTrends, reachSource: reach ? 'county-data' : 'dashboard-metrics' });
+    res.status(200).json({
+      metrics,
+      topNeeds,
+      checkinTrends,
+      reachSource: reach ? 'county-data' : 'dashboard-metrics',
+      totalReach,
+    });
   } catch (err) {
     res.status(200).json({ metrics: [], error: 'fetch_failed' });
   }
