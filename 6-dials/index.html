@@ -201,6 +201,13 @@
   .strat-legend li { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; column-gap: 12px; font-size: 14px; }
   .strat-swatch { width: 12px; height: 12px; border-radius: 3px; }
   .strat-pct { min-width: 44px; text-align: right; color: var(--text-faint); font-size: 13px; }
+  .roi-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+  .roi-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .roi-name { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .roi-value { font-size: 22px; font-weight: 700; }
+  .roi-track { height: 8px; border-radius: 999px; background: var(--border-soft); margin: 8px 0 6px; overflow: hidden; }
+  .roi-fill { height: 100%; border-radius: 999px; }
+  .roi-detail { font-size: 12px; color: var(--text-faint); }
   .span-all { grid-column: 1 / -1; }
   .drilldown-overlay-top { z-index: 110; }
   .signal-link {
@@ -651,6 +658,17 @@
         <div class="drill-empty">Loading&hellip;</div>
       </div>
     </div>
+
+    <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:20px; max-width:760px; margin-top:20px;">
+      <div>
+        <div style="font-size:15px; font-weight:700;">ROI</div>
+        <div style="font-size:12px; color:var(--text-faint); margin-top:4px;">Growth generated divided by grant awards, by strategy.</div>
+      </div>
+
+      <div id="roi-body">
+        <div class="drill-empty">Loading&hellip;</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -843,6 +861,42 @@
     body.innerHTML = html;
   }
 
+  var growthRoi = null;
+
+  function formatMultiple(r) {
+    if (r === 0) return '0x';
+    return (r >= 10 ? Math.round(r) : r.toFixed(1)) + 'x';
+  }
+
+  function renderRoi() {
+    var body = document.getElementById('roi-body');
+    if (!body || !growthRoi) return;
+    var ratios = STRATEGIES.map(function (st) { return growthRoi.roiByStrategy[st.key]; });
+    var maxRatio = Math.max.apply(null, ratios.map(function (r) { return r || 0; }));
+
+    var html = '<ul class="roi-list">';
+    STRATEGIES.forEach(function (st) {
+      var ratio = growthRoi.roiByStrategy[st.key];
+      var awards = growthRoi.awardsByStrategy[st.key] || 0;
+      var output = growthRoi.byStrategy[st.key] || 0;
+      var count = growthRoi.grantCountByStrategy[st.key] || 0;
+      var width = ratio && maxRatio > 0 ? (ratio / maxRatio) * 100 : 0;
+      var detail = awards > 0
+        ? formatDollars(output) + ' growth generated \u00f7 ' + formatDollars(awards) + ' awarded (' + count + (count === 1 ? ' grant' : ' grants') + ')'
+        : 'No grant awards in this category';
+      html += '<li>' +
+        '<div class="roi-head">' +
+          '<span class="roi-name"><span class="strat-swatch" style="background:' + st.color + ';"></span>' + st.label + '</span>' +
+          '<span class="mono roi-value">' + (ratio === null ? '\u2014' : formatMultiple(ratio)) + '</span>' +
+        '</div>' +
+        '<div class="roi-track"><div class="roi-fill" style="width:' + width + '%; background:' + st.color + ';"></div></div>' +
+        '<div class="roi-detail">' + detail + '</div>' +
+      '</li>';
+    });
+    html += '</ul>';
+    body.innerHTML = html;
+  }
+
   function applyGrowthGenerated() {
     if (!growthMeta || growthDollars === null) return;
     var el = document.querySelector('.submetric[data-metric="Growth generated"]');
@@ -908,13 +962,17 @@
       if (typeof data.dollars !== 'number') return;
       growthDollars = data.dollars;
       growthByStrategy = data.byStrategy || null;
+      growthRoi = data.roiByStrategy && data.awardsByStrategy ? data : null;
       applyGrowthGenerated();
       renderGrowthBreakdown();
+      renderRoi();
     })
     .catch(function () {
       // leave the Dashboard Metrics value in place
       var body = document.getElementById('strat-body');
       if (body) body.innerHTML = '<div class="drill-empty">The breakdown could not be loaded right now.</div>';
+      var roiBody = document.getElementById('roi-body');
+      if (roiBody) roiBody.innerHTML = '<div class="drill-empty">The ROI could not be loaded right now.</div>';
     });
 
   function renderDrillList(listId, grants) {

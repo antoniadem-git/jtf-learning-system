@@ -16,6 +16,10 @@
 // Entrepreneurship = "CED", Infrastructure = "Infrastructure". Any other
 // strategy is reported under "other" so the pieces always add up to the
 // total.
+//
+// It also sums the current-year cohort grants' "Grant Amount" awards by the
+// same three categories (using each grant's "Strategy (from Proposal)")
+// and returns ROI per category = economic output / grant awards.
 
 import { isCohortGrant } from './_cohort.js';
 
@@ -65,7 +69,13 @@ export default async function handler(req, res) {
 
   try {
     const [grants, impact] = await Promise.all([
-      fetchAll('Grants & Services', ['Grant Year', 'Status', 'Cycle (from Proposal)']),
+      fetchAll('Grants & Services', [
+        'Grant Year',
+        'Status',
+        'Cycle (from Proposal)',
+        'Grant Amount',
+        'Strategy (from Proposal)',
+      ]),
       fetchAll('Grant Impact Data', [
         'Economic Output',
         'Grant & Service ID',
@@ -75,8 +85,15 @@ export default async function handler(req, res) {
     ]);
 
     const cohortIds = new Set();
+    const awardsByStrategy = { workforce: 0, entrepreneurship: 0, infrastructure: 0, other: 0 };
+    const grantCountByStrategy = { workforce: 0, entrepreneurship: 0, infrastructure: 0, other: 0 };
     grants.forEach((g) => {
-      if (isCohortGrant(g.fields || {}, currentYear)) cohortIds.add(g.id);
+      const f = g.fields || {};
+      if (!isCohortGrant(f, currentYear)) return;
+      cohortIds.add(g.id);
+      const category = categoryOf(f['Strategy (from Proposal)']);
+      awardsByStrategy[category] += typeof f['Grant Amount'] === 'number' ? f['Grant Amount'] : 0;
+      grantCountByStrategy[category] += 1;
     });
 
     let dollars = 0;
@@ -96,6 +113,11 @@ export default async function handler(req, res) {
       linked.forEach((id) => grantsWithOutput.add(id));
     });
 
+    const roiByStrategy = {};
+    ['workforce', 'entrepreneurship', 'infrastructure'].forEach((key) => {
+      roiByStrategy[key] = awardsByStrategy[key] > 0 ? byStrategy[key] / awardsByStrategy[key] : null;
+    });
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.status(200).json({
       year: currentYear,
@@ -104,6 +126,9 @@ export default async function handler(req, res) {
       recordsCounted,
       dollars,
       byStrategy,
+      awardsByStrategy,
+      grantCountByStrategy,
+      roiByStrategy,
     });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
