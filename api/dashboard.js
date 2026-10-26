@@ -5,10 +5,12 @@
 // Reach metrics come from the JTF County Data base (County Master List),
 // counting Core counties (2023 Prioritization = "Core"):
 //   Total communities reached = 2026 = "Y"
-//   New reached via LEL       = 2026 = "Y" and First Reach Cycle contains
-//                               FAC, Local Economy Lab or Policy
-//   New reached via TE        = 2026 = "Y" and First Reach Cycle contains
-//                               Transition Exchange
+//   New reached via LEL       = First Reach Year = 2026 and First Reach
+//                               Cycle contains FAC, Local Economy Lab or
+//                               Policy
+//   New reached via TE        = First Reach Year = 2026 and First Reach
+//                               Cycle contains Transition Exchange
+const NEW_REACH_YEAR = '2026';
 const COUNTY_BASE_ID = 'appaRgCRhALmxR9by';
 const COUNTY_TABLE = 'County Master List';
 
@@ -18,7 +20,7 @@ async function fetchReachCounts(token) {
   do {
     const url = new URL(`https://api.airtable.com/v0/${COUNTY_BASE_ID}/${encodeURIComponent(COUNTY_TABLE)}`);
     url.searchParams.set('pageSize', '100');
-    ['2023 Prioritization', '2026', 'First Reach Cycle'].forEach((f) => url.searchParams.append('fields[]', f));
+    ['2023 Prioritization', '2026', 'First Reach Year', 'First Reach Cycle'].forEach((f) => url.searchParams.append('fields[]', f));
     if (offset) url.searchParams.set('offset', offset);
     const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok) throw new Error(`County data responded ${r.status}`);
@@ -30,14 +32,17 @@ async function fetchReachCounts(token) {
   const text = (v) => (Array.isArray(v) ? v.join(' | ') : v == null ? '' : String(v)).toLowerCase();
   const core = records.filter((rec) => text((rec.fields || {})['2023 Prioritization']).trim() === 'core');
   const reached2026 = core.filter((rec) => text((rec.fields || {})['2026']).trim() === 'y');
+  const firstReachedThisYear = core.filter(
+    (rec) => text((rec.fields || {})['First Reach Year']).trim() === NEW_REACH_YEAR
+  );
   const cycleHas = (rec, needles) => {
     const c = text((rec.fields || {})['First Reach Cycle']);
     return needles.some((n) => c.includes(n.toLowerCase()));
   };
   return {
     'Total communities reached': reached2026.length,
-    'New reached via LEL': reached2026.filter((rec) => cycleHas(rec, ['FAC', 'Local Economy Lab', 'Policy'])).length,
-    'New reached via TE': reached2026.filter((rec) => cycleHas(rec, ['Transition Exchange'])).length,
+    'New reached via LEL': firstReachedThisYear.filter((rec) => cycleHas(rec, ['FAC', 'Local Economy Lab', 'Policy'])).length,
+    'New reached via TE': firstReachedThisYear.filter((rec) => cycleHas(rec, ['Transition Exchange'])).length,
   };
 }
 
