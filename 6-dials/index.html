@@ -922,7 +922,7 @@
     if (fill) fill.style.setProperty('--fill', clampPct(scaled, growthMeta.target));
   }
 
-  fetch('/api/dashboard')
+  fetch('/api/dashboard?reach=county')
     .then(function (r) { return r.json(); })
     .then(function (data) {
       var byMetric = {};
