@@ -19,7 +19,8 @@
 //
 // It also sums the current-year cohort grants' "Grant Amount" awards by the
 // same three categories (using each grant's "Strategy (from Proposal)")
-// and returns ROI per category = economic output / grant awards.
+// and returns ROI per category = economic output / grant awards, plus an
+// overall ROI from the three categories' totals summed together.
 
 import { isCohortGrant } from './_cohort.js';
 
@@ -118,6 +119,16 @@ export default async function handler(req, res) {
       roiByStrategy[key] = awardsByStrategy[key] > 0 ? byStrategy[key] / awardsByStrategy[key] : null;
     });
 
+    // Overall ROI: the three categories' growth and awards summed together.
+    const keys = ['workforce', 'entrepreneurship', 'infrastructure'];
+    const overallGrowth = keys.reduce((sum, k) => sum + byStrategy[k], 0);
+    const overallAwards = keys.reduce((sum, k) => sum + awardsByStrategy[k], 0);
+    const overallRoi = {
+      growth: overallGrowth,
+      awards: overallAwards,
+      roi: overallAwards > 0 ? overallGrowth / overallAwards : null,
+    };
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.status(200).json({
       year: currentYear,
@@ -129,6 +140,7 @@ export default async function handler(req, res) {
       awardsByStrategy,
       grantCountByStrategy,
       roiByStrategy,
+      overallRoi,
     });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
