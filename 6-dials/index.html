@@ -164,6 +164,9 @@
   .drill-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
   .drill-list li { font-size: 13px; padding: 8px 10px; background: var(--surface-alt); border-radius: 8px; }
   .drill-empty { font-size: 13px; color: var(--text-faint); font-style: italic; }
+  .trend-bullets { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
+  .trend-bullets[hidden], .drill-soon[hidden] { display: none; }
+  .trend-bullets li { font-size: 13px; line-height: 1.5; color: var(--text-muted); }
   .drill-soon { font-size: 13px; color: var(--text-faint); font-style: italic; }
 
 
@@ -548,7 +551,8 @@
           </span>
           <span style="font-size:15px; font-weight:700;">Trends from Check-Ins</span>
         </div>
-        <div class="drill-soon">Coming soon.</div>
+        <div class="drill-soon" id="trends-soon">Coming soon.</div>
+        <ul class="trend-bullets" id="drill-trends" hidden></ul>
       </div>
 
       <!-- PROPOSED IMPACT FOR 2026 COHORT -->
@@ -736,6 +740,21 @@
 
       growthMeta = byMetric['Growth generated'] || null;
       applyGrowthGenerated();
+
+      if (Array.isArray(data.checkinTrends) && data.checkinTrends.length > 0) {
+        var trendList = document.getElementById('drill-trends');
+        var trendSoon = document.getElementById('trends-soon');
+        if (trendList) {
+          trendList.innerHTML = '';
+          data.checkinTrends.forEach(function (text) {
+            var li = document.createElement('li');
+            li.textContent = text;
+            trendList.appendChild(li);
+          });
+          trendList.hidden = false;
+          if (trendSoon) trendSoon.hidden = true;
+        }
+      }
 
       if (Array.isArray(data.topNeeds) && data.topNeeds.length > 0) {
         var items = document.querySelectorAll('[data-topneeds] .topneeds-list li');

@@ -57,10 +57,19 @@ export default async function handler(req, res) {
       .filter(Boolean)
       .slice(0, 3);
 
+    // "Check-In Trends" works the same way: newline-separated bullets in the
+    // Text Summary field, written by staff (themes only, no grantee names).
+    const trendsRecord = records.find((rec) => (rec.fields || {})['Metric'] === 'Check-In Trends');
+    const checkinTrends = ((trendsRecord && trendsRecord.fields['Text Summary']) || '')
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 6);
+
     // Cache at Vercel's edge for 60s, serve stale for up to 5min while revalidating,
     // so normal traffic doesn't hammer Airtable's rate limit.
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
-    res.status(200).json({ metrics, topNeeds });
+    res.status(200).json({ metrics, topNeeds, checkinTrends });
   } catch (err) {
     res.status(200).json({ metrics: [], error: 'fetch_failed' });
   }
