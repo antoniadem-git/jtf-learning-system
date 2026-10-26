@@ -23,6 +23,9 @@
     --risk: oklch(58% 0.17 25);
     --warn: oklch(64% 0.15 70);
     --neutral-status: oklch(62% 0.01 240);
+    --cat-workforce: oklch(52% 0.14 250);
+    --cat-entrepreneurship: oklch(58% 0.11 195);
+    --cat-infrastructure: oklch(55% 0.14 305);
     --shadow: oklch(20% 0 0 / 8%);
   }
 
@@ -42,6 +45,9 @@
       --risk: oklch(66% 0.17 25);
       --warn: oklch(74% 0.14 70);
       --neutral-status: oklch(58% 0.012 240);
+      --cat-workforce: oklch(72% 0.13 250);
+      --cat-entrepreneurship: oklch(74% 0.11 195);
+      --cat-infrastructure: oklch(72% 0.13 305);
       --shadow: oklch(0% 0 0 / 35%);
     }
   }
@@ -61,6 +67,9 @@
     --risk: oklch(66% 0.17 25);
     --warn: oklch(74% 0.14 70);
     --neutral-status: oklch(58% 0.012 240);
+    --cat-workforce: oklch(72% 0.13 250);
+    --cat-entrepreneurship: oklch(74% 0.11 195);
+    --cat-infrastructure: oklch(72% 0.13 305);
     --shadow: oklch(0% 0 0 / 35%);
   }
 
@@ -182,6 +191,16 @@
   }
 
 
+  .strat-bar { position: relative; height: 22px; border-radius: 999px; background: var(--border-soft); overflow: hidden; display: flex; }
+  .strat-seg { height: 100%; }
+  .strat-seg + .strat-seg { box-shadow: -2px 0 0 var(--surface); }
+  .strat-wrap { position: relative; padding-top: 26px; }
+  .strat-target { position: absolute; top: 20px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--text); opacity: .75; }
+  .strat-target-label { position: absolute; top: 0; font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+  .strat-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .strat-legend li { display: grid; grid-template-columns: 14px 1fr auto auto; align-items: center; column-gap: 12px; font-size: 14px; }
+  .strat-swatch { width: 12px; height: 12px; border-radius: 3px; }
+  .strat-pct { min-width: 44px; text-align: right; color: var(--text-faint); font-size: 13px; }
   .span-all { grid-column: 1 / -1; }
   .drilldown-overlay-top { z-index: 110; }
   .signal-link {
@@ -280,6 +299,11 @@
           <div class="track"><div class="fill status-good" style="--fill:60;"></div></div>
         </div>
       </div>
+
+      <a href="#" id="economic-output-more-details" style="font-size:13px; font-weight:600; display:inline-flex; align-items:center; gap:6px; margin-top:2px;">
+        More Details
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+      </a>
     </div>
 
     <!-- READINESS -->
@@ -604,6 +628,32 @@
   </div>
 </div>
 
+<!-- ECONOMIC OUTPUT DRILL-DOWN -->
+<div class="drilldown-overlay" id="economic-output-drilldown" hidden>
+  <div class="wrap" style="padding-top:32px;">
+    <button type="button" class="drilldown-back" id="economic-output-drilldown-close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="11 18 5 12 11 6"></polyline></svg>
+      Back to dashboard
+    </button>
+
+    <div style="margin:12px 0 28px;">
+      <div style="font-size:22px; font-weight:700;">Economic Output</div>
+      <p style="max-width:640px; color:var(--text-muted); font-size:14px; line-height:1.55; margin:6px 0 0;">Where this year's growth generated comes from, by grant strategy.</p>
+    </div>
+
+    <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:20px; max-width:760px;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <span style="font-size:15px; font-weight:700;">Growth generated</span>
+        <span id="strat-total" class="mono" style="font-size:15px; font-weight:600;"></span>
+      </div>
+
+      <div id="strat-body">
+        <div class="drill-empty">Loading&hellip;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- FIELD SIGNAL DRILL-DOWN -->
 <div class="drilldown-overlay" id="field-signal-drilldown" hidden>
   <div class="wrap" style="padding-top:32px;">
@@ -711,6 +761,88 @@
   var growthMeta = null;
   var growthDollars = null;
 
+  var growthByStrategy = null;
+
+  var STRATEGIES = [
+    { key: 'workforce', label: 'Workforce', color: 'var(--cat-workforce)' },
+    { key: 'entrepreneurship', label: 'Entrepreneurship', color: 'var(--cat-entrepreneurship)' },
+    { key: 'infrastructure', label: 'Infrastructure', color: 'var(--cat-infrastructure)' }
+  ];
+
+  function formatDollars(n) {
+    if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return '$' + Math.round(n / 1e3).toLocaleString('en-US') + 'K';
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+
+  function renderGrowthBreakdown() {
+    var body = document.getElementById('strat-body');
+    var totalEl = document.getElementById('strat-total');
+    if (!body || !growthByStrategy || growthDollars === null) return;
+
+    var total = growthDollars;
+    var unit = growthMeta ? ({ K: 1e3, M: 1e6, B: 1e9 }[growthMeta.suffix] || 1) : 1;
+    var target = growthMeta && growthMeta.target ? growthMeta.target * unit : 0;
+    var scale = Math.max(total, target) || 1;
+
+    totalEl.textContent = formatDollars(total) + (target ? ' of ' + formatDollars(target) + ' target' : '');
+
+    var summary = STRATEGIES.map(function (st) {
+      return st.label + ' ' + formatDollars(growthByStrategy[st.key] || 0);
+    }).join(', ');
+
+    var html = '<div class="strat-wrap" role="img" aria-label="Growth generated by strategy: ' + summary + '">';
+    if (target) {
+      var tp = (target / scale) * 100;
+      var labelPos = tp > 85 ? 'right:' + (100 - tp) + '%;' : 'left:' + tp + '%; transform:translateX(-50%);';
+      html += '<div class="strat-target-label" style="' + labelPos + '">Target ' + formatDollars(target) + '</div>';
+      html += '<div class="strat-target" style="left:' + tp + '%;"></div>';
+    }
+    html += '<div class="strat-bar">';
+    STRATEGIES.forEach(function (st) {
+      var amt = growthByStrategy[st.key] || 0;
+      if (amt <= 0) return;
+      html += '<div class="strat-seg" title="' + st.label + ': ' + formatDollars(amt) + '" style="width:' + (amt / scale) * 100 + '%; background:' + st.color + ';"></div>';
+    });
+    html += '</div></div>';
+
+    // Shares are a percentage of the whole total (including any "other"
+    // strategies), rounded by largest remainder so they add up to 100%.
+    var shares = {};
+    var buckets = STRATEGIES.map(function (st) { return { key: st.key, amt: growthByStrategy[st.key] || 0 }; });
+    buckets.push({ key: 'other', amt: growthByStrategy.other || 0 });
+    var bucketTotal = buckets.reduce(function (sum, b) { return sum + b.amt; }, 0);
+    if (bucketTotal > 0) {
+      buckets.forEach(function (b) {
+        var exact = (b.amt / bucketTotal) * 100;
+        b.floor = Math.floor(exact);
+        b.rem = exact - b.floor;
+      });
+      var left = 100 - buckets.reduce(function (sum, b) { return sum + b.floor; }, 0);
+      buckets.slice().sort(function (a, b) { return b.rem - a.rem; }).slice(0, left).forEach(function (b) { b.floor += 1; });
+      buckets.forEach(function (b) { shares[b.key] = b.floor; });
+    }
+
+    html += '<ul class="strat-legend" style="margin-top:18px;">';
+    STRATEGIES.forEach(function (st) {
+      var amt = growthByStrategy[st.key] || 0;
+      var share = shares[st.key] || 0;
+      html += '<li><span class="strat-swatch" style="background:' + st.color + ';"></span>' +
+              '<span>' + st.label + '</span>' +
+              '<span class="mono" style="font-weight:600;">' + formatDollars(amt) + '</span>' +
+              '<span class="mono strat-pct">' + share + '%</span></li>';
+    });
+    html += '</ul>';
+
+    var other = growthByStrategy.other || 0;
+    if (other > 0) {
+      html += '<div style="font-size:12px; color:var(--text-faint); margin-top:14px;">Plus ' + formatDollars(other) +
+              ' from grants under other strategies, included in the total but not shown above.</div>';
+    }
+    body.innerHTML = html;
+  }
+
   function applyGrowthGenerated() {
     if (!growthMeta || growthDollars === null) return;
     var el = document.querySelector('.submetric[data-metric="Growth generated"]');
@@ -741,6 +873,7 @@
 
       growthMeta = byMetric['Growth generated'] || null;
       applyGrowthGenerated();
+      renderGrowthBreakdown();
 
       if (Array.isArray(data.checkinTrends) && data.checkinTrends.length > 0) {
         var trendList = document.getElementById('drill-trends');
@@ -774,10 +907,14 @@
     .then(function (data) {
       if (typeof data.dollars !== 'number') return;
       growthDollars = data.dollars;
+      growthByStrategy = data.byStrategy || null;
       applyGrowthGenerated();
+      renderGrowthBreakdown();
     })
     .catch(function () {
       // leave the Dashboard Metrics value in place
+      var body = document.getElementById('strat-body');
+      if (body) body.innerHTML = '<div class="drill-empty">The breakdown could not be loaded right now.</div>';
     });
 
   function renderDrillList(listId, grants) {
@@ -916,6 +1053,7 @@
 
   setupDrilldown('grantee-signal-card', 'grantee-signal-drilldown', 'drilldown-close');
   setupDrilldown('field-signal-more-details', 'field-signal-drilldown', 'field-signal-drilldown-close');
+  setupDrilldown('economic-output-more-details', 'economic-output-drilldown', 'economic-output-drilldown-close');
 
   // Third level: clicking a breakdown number opens the grant lists page
   // and scrolls to the matching section.

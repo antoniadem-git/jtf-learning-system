@@ -9,8 +9,29 @@
 // except records whose "Proposed Inclusion" is set to "Exclude" (the
 // table's own way of retiring a Proposed record once an Actual one
 // exists, so the two aren't double-counted).
+//
+// The total is also split by the grant's Strategy (the record's
+// "Strategy (from Grant Proposal)" lookup). The dashboard's three
+// categories map to the Strategy values as: Workforce = "Workforce",
+// Entrepreneurship = "CED", Infrastructure = "Infrastructure". Any other
+// strategy is reported under "other" so the pieces always add up to the
+// total.
 
 import { isCohortGrant } from './_cohort.js';
+
+const STRATEGY_CATEGORY = {
+  Workforce: 'workforce',
+  CED: 'entrepreneurship',
+  Infrastructure: 'infrastructure',
+};
+
+function categoryOf(strategyField) {
+  const list = Array.isArray(strategyField) ? strategyField : strategyField ? [strategyField] : [];
+  for (const name of list) {
+    if (STRATEGY_CATEGORY[name]) return STRATEGY_CATEGORY[name];
+  }
+  return 'other';
+}
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -45,7 +66,12 @@ export default async function handler(req, res) {
   try {
     const [grants, impact] = await Promise.all([
       fetchAll('Grants & Services', ['Grant Year', 'Status', 'Cycle (from Proposal)']),
-      fetchAll('Grant Impact Data', ['Economic Output', 'Grant & Service ID', 'Proposed Inclusion']),
+      fetchAll('Grant Impact Data', [
+        'Economic Output',
+        'Grant & Service ID',
+        'Proposed Inclusion',
+        'Strategy (from Grant Proposal)',
+      ]),
     ]);
 
     const cohortIds = new Set();
@@ -55,6 +81,7 @@ export default async function handler(req, res) {
 
     let dollars = 0;
     let recordsCounted = 0;
+    const byStrategy = { workforce: 0, entrepreneurship: 0, infrastructure: 0, other: 0 };
     const grantsWithOutput = new Set();
     impact.forEach((rec) => {
       const f = rec.fields || {};
@@ -64,6 +91,7 @@ export default async function handler(req, res) {
       const linked = (f['Grant & Service ID'] || []).filter((id) => cohortIds.has(id));
       if (linked.length === 0) return;
       dollars += amount;
+      byStrategy[categoryOf(f['Strategy (from Grant Proposal)'])] += amount;
       recordsCounted += 1;
       linked.forEach((id) => grantsWithOutput.add(id));
     });
@@ -75,6 +103,7 @@ export default async function handler(req, res) {
       grantsWithOutput: grantsWithOutput.size,
       recordsCounted,
       dollars,
+      byStrategy,
     });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
