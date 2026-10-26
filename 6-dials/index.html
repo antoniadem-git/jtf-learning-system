@@ -163,6 +163,7 @@
 
   .drill-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
   .drill-list li { font-size: 13px; padding: 8px 10px; background: var(--surface-alt); border-radius: 8px; }
+  .drill-list li.overdue { background: color-mix(in srgb, var(--risk) 16%, var(--surface)); }
   .drill-empty { font-size: 13px; color: var(--text-faint); font-style: italic; }
   .trend-bullets { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; }
   .trend-bullets[hidden], .drill-soon[hidden] { display: none; }
@@ -820,8 +821,14 @@
       el.appendChild(empty);
       return;
     }
+    var now = new Date();
+    var today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
     rows.forEach(function (row) {
       var li = document.createElement('li');
+      if (row.date < today) {
+        li.className = 'overdue';
+        li.title = 'Overdue';
+      }
       var d = new Date(row.date + 'T00:00:00');
       var label = isNaN(d.getTime())
         ? row.date
