@@ -5,9 +5,10 @@
 // Reach metrics come from the JTF County Data base (County Master List),
 // counting Core counties (2023 Prioritization = "Core"):
 //   Total communities reached = 2026 = "Y"
-//   New reached via LEL       = First Reach Cycle contains FAC, Local
-//                               Economy Lab or Policy
-//   New reached via TE        = First Reach Cycle contains Transition Exchange
+//   New reached via LEL       = 2026 = "Y" and First Reach Cycle contains
+//                               FAC, Local Economy Lab or Policy
+//   New reached via TE        = 2026 = "Y" and First Reach Cycle contains
+//                               Transition Exchange
 const COUNTY_BASE_ID = 'appaRgCRhALmxR9by';
 const COUNTY_TABLE = 'County Master List';
 
@@ -28,16 +29,15 @@ async function fetchReachCounts(token) {
 
   const text = (v) => (Array.isArray(v) ? v.join(' | ') : v == null ? '' : String(v)).toLowerCase();
   const core = records.filter((rec) => text((rec.fields || {})['2023 Prioritization']).trim() === 'core');
+  const reached2026 = core.filter((rec) => text((rec.fields || {})['2026']).trim() === 'y');
   const cycleHas = (rec, needles) => {
     const c = text((rec.fields || {})['First Reach Cycle']);
     return needles.some((n) => c.includes(n.toLowerCase()));
   };
   return {
-    'Total communities reached': core.filter(
-      (rec) => text((rec.fields || {})['2026']).trim() === 'y'
-    ).length,
-    'New reached via LEL': core.filter((rec) => cycleHas(rec, ['FAC', 'Local Economy Lab', 'Policy'])).length,
-    'New reached via TE': core.filter((rec) => cycleHas(rec, ['Transition Exchange'])).length,
+    'Total communities reached': reached2026.length,
+    'New reached via LEL': reached2026.filter((rec) => cycleHas(rec, ['FAC', 'Local Economy Lab', 'Policy'])).length,
+    'New reached via TE': reached2026.filter((rec) => cycleHas(rec, ['Transition Exchange'])).length,
   };
 }
 
