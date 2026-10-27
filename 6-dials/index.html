@@ -915,6 +915,21 @@
     body.innerHTML = html;
   }
 
+  // "Brightspot candidates" count comes from the Local Economy Lab base
+  // (/api/brightspot); the target still comes from the Dashboard Metrics row.
+  var brightspotMeta = null;
+  var brightspotCount = null;
+
+  function applyBrightspot() {
+    if (!brightspotMeta || brightspotCount === null) return;
+    var el = document.querySelector('.submetric[data-metric="Brightspot candidates"]');
+    if (!el) return;
+    var current = el.querySelector('.submetric-current');
+    var fill = el.querySelector('.fill');
+    if (current) current.textContent = brightspotCount.toLocaleString('en-US');
+    if (fill) fill.style.setProperty('--fill', clampPct(brightspotCount, brightspotMeta.target));
+  }
+
   function applyGrowthGenerated() {
     if (!growthMeta || growthDollars === null) return;
     var el = document.querySelector('.submetric[data-metric="Growth generated"]');
@@ -954,6 +969,8 @@
       growthMeta = byMetric['Growth generated'] || null;
       applyGrowthGenerated();
       renderGrowthBreakdown();
+      brightspotMeta = byMetric['Brightspot candidates'] || null;
+      applyBrightspot();
 
       if (Array.isArray(data.checkinTrends) && data.checkinTrends.length > 0) {
         var trendList = document.getElementById('drill-trends');
@@ -999,6 +1016,17 @@
       if (body) body.innerHTML = '<div class="drill-empty">The breakdown could not be loaded right now.</div>';
       var roiBody = document.getElementById('roi-body');
       if (roiBody) roiBody.innerHTML = '<div class="drill-empty">The ROI could not be loaded right now.</div>';
+    });
+
+  fetch('/api/brightspot')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (typeof data.brightSpot !== 'number') return;
+      brightspotCount = data.brightSpot;
+      applyBrightspot();
+    })
+    .catch(function () {
+      // leave the Dashboard Metrics value in place
     });
 
   function renderDrillList(listId, grants) {
