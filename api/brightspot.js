@@ -1,6 +1,12 @@
 // Serverless function (runs on Vercel's servers, never in the browser).
-// Counts "Brightspot candidates": current-year cohort grants whose
-// proposal is a Bright Spot proposal in the Local Economy Lab base.
+// Two counts over the current-year cohort, both from the Local Economy Lab
+// (LEL) base:
+//   - brightSpot:  cohort grants whose proposal is a Bright Spot proposal
+//                  ("Brightspot candidates").
+//   - inPipeline:  cohort grants whose proposal has ANY non-empty LEL
+//                  Program ("Bright Spot" or "Get Ready"), used for
+//                  "Projects in pipeline". byProgram breaks that count down
+//                  by program value as a sanity check.
 //
 // How a grant is matched to the LEL base:
 //   1. A cohort grant (Contacts & Grants base, rules in ./_cohort.js) links
@@ -11,7 +17,7 @@
 //   3. In the Local Economy Lab base, "LEL Step 2 Application" holds the
 //      proposals under the same "ID" name, and its "LEL Program (from Step 1)"
 //      lookup says whether the proposal came in as "Bright Spot".
-// A grant counts once if any of its proposals is a Bright Spot proposal.
+// A grant counts once per count, however many proposals it has.
 
 import { isCohortGrant } from './_cohort.js';
 
@@ -81,6 +87,8 @@ export default async function handler(req, res) {
     let cohortGrants = 0;
     let matchedInLel = 0;
     let brightSpot = 0;
+    let inPipeline = 0;
+    const byProgram = {};
     grants.forEach((g) => {
       const f = g.fields || {};
       if (!isCohortGrant(f, currentYear)) return;
@@ -90,10 +98,23 @@ export default async function handler(req, res) {
       const inLel = names.filter((n) => lelProgramsByName.has(n));
       if (inLel.length > 0) matchedInLel += 1;
       if (inLel.some((n) => lelProgramsByName.get(n).includes(BRIGHT_SPOT))) brightSpot += 1;
+
+      const programs = new Set();
+      inLel.forEach((n) =>
+        lelProgramsByName.get(n).forEach((p) => {
+          if (typeof p === 'string' && p.trim()) programs.add(p.trim());
+        })
+      );
+      if (programs.size > 0) {
+        inPipeline += 1;
+        programs.forEach((p) => {
+          byProgram[p] = (byProgram[p] || 0) + 1;
+        });
+      }
     });
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
-    res.status(200).json({ year: currentYear, grants: cohortGrants, matchedInLel, brightSpot });
+    res.status(200).json({ year: currentYear, grants: cohortGrants, matchedInLel, brightSpot, inPipeline, byProgram });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
   }

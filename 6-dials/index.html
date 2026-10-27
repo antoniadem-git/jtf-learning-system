@@ -930,6 +930,22 @@
     if (fill) fill.style.setProperty('--fill', clampPct(brightspotCount, brightspotMeta.target));
   }
 
+  // "Projects in pipeline" count also comes from the Local Economy Lab base
+  // (/api/brightspot: cohort grants whose proposal has any LEL Program); the
+  // target still comes from the Dashboard Metrics row.
+  var pipelineMeta = null;
+  var pipelineCount = null;
+
+  function applyPipeline() {
+    if (!pipelineMeta || pipelineCount === null) return;
+    var el = document.querySelector('.submetric[data-metric="Projects in pipeline"]');
+    if (!el) return;
+    var current = el.querySelector('.submetric-current');
+    var fill = el.querySelector('.fill');
+    if (current) current.textContent = pipelineCount.toLocaleString('en-US');
+    if (fill) fill.style.setProperty('--fill', clampPct(pipelineCount, pipelineMeta.target));
+  }
+
   function applyGrowthGenerated() {
     if (!growthMeta || growthDollars === null) return;
     var el = document.querySelector('.submetric[data-metric="Growth generated"]');
@@ -971,6 +987,8 @@
       renderGrowthBreakdown();
       brightspotMeta = byMetric['Brightspot candidates'] || null;
       applyBrightspot();
+      pipelineMeta = byMetric['Projects in pipeline'] || null;
+      applyPipeline();
 
       if (Array.isArray(data.checkinTrends) && data.checkinTrends.length > 0) {
         var trendList = document.getElementById('drill-trends');
@@ -1021,9 +1039,14 @@
   fetch('/api/brightspot')
     .then(function (r) { return r.json(); })
     .then(function (data) {
-      if (typeof data.brightSpot !== 'number') return;
-      brightspotCount = data.brightSpot;
-      applyBrightspot();
+      if (typeof data.brightSpot === 'number') {
+        brightspotCount = data.brightSpot;
+        applyBrightspot();
+      }
+      if (typeof data.inPipeline === 'number') {
+        pipelineCount = data.inPipeline;
+        applyPipeline();
+      }
     })
     .catch(function () {
       // leave the Dashboard Metrics value in place
