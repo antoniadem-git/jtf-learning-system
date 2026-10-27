@@ -64,59 +64,8 @@ export default async function handler(req, res) {
         'Grant Proposals',
       ]),
       fetchAll(CG_BASE, 'Proposals', ['ID']),
-      fetchAll(LEL_BASE, 'LEL Step 2 Application', ['ID', 'LEL Program (from Step 1)', 'Step 1 Application']),
+      fetchAll(LEL_BASE, 'LEL Step 2 Application', ['ID', 'LEL Program (from Step 1)']),
     ]);
-
-    // TEMP DIAGNOSTIC (aggregate counts only) - remove after use.
-    if (req.query && req.query.debug === '1') {
-      const step1 = await fetchAll(LEL_BASE, 'LEL Step 1 Application', ['LEL Program', 'Grant Proposal', 'Submission Date']);
-      const pn = new Map();
-      proposals.forEach((p) => { const n = nameKey((p.fields || {})['ID']); if (n) pn.set(p.id, n); });
-      const cohortNames = new Set();
-      grants.forEach((g) => {
-        const f = g.fields || {};
-        if (!isCohortGrant(f, currentYear)) return;
-        (f['Grant Proposals'] || []).forEach((id) => pn.get(id) && cohortNames.add(pn.get(id)));
-      });
-      const matched = lelProposals.filter((p) => cohortNames.has(nameKey((p.fields || {})['ID'])));
-      const matchedIds = new Set(matched.map((p) => p.id));
-      const tally = (arr) => arr.reduce((a, v) => { a[v] = (a[v] || 0) + 1; return a; }, {});
-      const shape = (v) => (Array.isArray(v) ? 'array:' + v.map((x) => typeof x).join(',') : typeof v);
-      const s1Prog = step1.filter((r) => (r.fields || {})['LEL Program']);
-      const norm = (v) => nameKey(v).toLowerCase().replace(/\s+/g, ' ');
-      const cohortNorm = new Set([...cohortNames].map(norm));
-      const step1Full = await fetchAll(LEL_BASE, 'LEL Step 1 Application', ['ID', 'LEL Program']);
-      const s1ExactMatch = step1Full.filter((r) => cohortNames.has(nameKey((r.fields || {})['ID'])));
-      const s1NormMatch = step1Full.filter((r) => cohortNorm.has(norm((r.fields || {})['ID'])));
-      const s2NormMatch = lelProposals.filter((p) => cohortNorm.has(norm((p.fields || {})['ID'])));
-      const unmatchedNames = [...cohortNames].filter((n) => !lelProposals.some((p) => nameKey((p.fields || {})['ID']) === n));
-      const idShape = (v) => (typeof v === 'string' ? 'len' + (v.length > 60 ? '>60' : '<=60') + (v.includes('\n') ? '+newline' : '') : typeof v);
-      res.setHeader('Cache-Control', 'no-store');
-      res.status(200).json({
-        cohortProposalNames: cohortNames.size,
-        step2Total: lelProposals.length,
-        step2Matched: matched.length,
-        step2MatchedWithStep1Link: matched.filter((p) => ((p.fields || {})['Step 1 Application'] || []).length > 0).length,
-        step2MatchedWithProgramLookup: matched.filter((p) => ((p.fields || {})['LEL Program (from Step 1)'] || []).length > 0).length,
-        step2MatchedLookupShapes: tally(matched.map((p) => shape((p.fields || {})['LEL Program (from Step 1)']))),
-        step2AllWithProgramLookup: lelProposals.filter((p) => ((p.fields || {})['LEL Program (from Step 1)'] || []).length > 0).length,
-        step1Total: step1.length,
-        step1WithProgram: s1Prog.length,
-        step1ProgramValues: tally(s1Prog.map((r) => r.fields['LEL Program'])),
-        step1ProgramBySubmissionYear: tally(s1Prog.map((r) => String((r.fields['Submission Date'] || '').slice(0, 4) || 'none'))),
-        step1AllBySubmissionYear: tally(step1.map((r) => String(((r.fields || {})['Submission Date'] || '').slice(0, 4) || 'none'))),
-        step1ExactIdMatchToCohort: s1ExactMatch.length,
-        step1ExactIdMatchWithProgram: s1ExactMatch.filter((r) => r.fields['LEL Program']).length,
-        step1NormIdMatchToCohort: s1NormMatch.length,
-        step1NormIdMatchWithProgram: s1NormMatch.filter((r) => r.fields['LEL Program']).length,
-        step2NormIdMatchToCohort: s2NormMatch.length,
-        cohortNamesWithNoStep2Match: unmatchedNames.length,
-        cohortNameShapes: unmatchedNames.reduce((a, n) => { const k = idShape(n); a[k] = (a[k] || 0) + 1; return a; }, {}),
-        step1IdShapes: step1Full.slice(0, 400).reduce((a, r) => { const k = idShape((r.fields || {})['ID']); a[k] = (a[k] || 0) + 1; return a; }, {}),
-        step1WithProgramAndLinkToMatchedStep2: s1Prog.filter((r) => (r.fields['Grant Proposal'] || []).some((id) => matchedIds.has(id))).length,
-      });
-      return;
-    }
 
     const proposalNameById = new Map();
     proposals.forEach((p) => {
