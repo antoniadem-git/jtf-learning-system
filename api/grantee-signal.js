@@ -41,12 +41,17 @@ import { isCohortGrant } from './_cohort.js';
 // from the Core Metrics doc and the Grant Impact Data field that holds it.
 const PROPOSED_IMPACT_METRICS = [
   { label: 'Workers trained / participants served', field: 'People participated in training' },
+  { label: 'Workers placed in employment at exit', field: 'Trainees receiving employment' },
   { label: 'Entrepreneurs trained / participants served', field: 'Total entrepreneurs supported' },
+  { label: 'Access to capital secured', field: 'Access to Capital Secured' },
   { label: 'Households / businesses connected', field: 'Broadband Connected' },
+  { label: 'Clean energy capacity installed', field: 'Renewables installed (kW)', suffix: ' kW' },
+  { label: 'Acres reclaimed or remediated', field: 'Acres of Land Reclaimed / Remediated' },
   { label: 'Community members impacted', field: 'People Served' },
   { label: 'Jobs created', field: 'New Jobs Created' },
   { label: 'Jobs retained', field: 'Jobs Retained' },
   { label: 'Businesses created / served', field: 'New businesses created' },
+  { label: 'Partnerships created', field: 'Partnerships Created' },
   { label: 'Public funds leveraged', field: 'Public funds leveraged', prefix: '$' },
   { label: 'Private funds leveraged', field: 'Private funds leveraged', prefix: '$' },
 ];
@@ -213,6 +218,7 @@ export default async function handler(req, res) {
           label: m.label,
           value: totals[i],
           prefix: m.prefix || '',
+          suffix: m.suffix || '',
         })),
       };
     } catch (e) {

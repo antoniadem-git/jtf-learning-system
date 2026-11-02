@@ -1141,7 +1141,7 @@
       label.textContent = m.label;
       var value = document.createElement('span');
       value.className = 'mono metric-value';
-      value.textContent = (m.prefix || '') + Number(m.value).toLocaleString('en-US');
+      value.textContent = (m.prefix || '') + Number(m.value).toLocaleString('en-US') + (m.suffix || '');
       li.appendChild(label);
       li.appendChild(value);
       list.appendChild(li);
