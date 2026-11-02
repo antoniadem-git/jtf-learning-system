@@ -5,7 +5,7 @@
 // rolls over automatically each January, and to the shared grant
 // cohort defined in ./_cohort.js (same rules as /api/economic-output:
 // excludes Policy and Convening cycles and the On Hold (Matching Funds)
-// / On Hold (Future Multi-Year) statuses):
+// / On Hold (Future Multi-Year) / Never Paid Out statuses):
 //
 //   percent (current-year cohort) = numerator = cohort grants whose
 //                            most recent COMPLETED check-in has

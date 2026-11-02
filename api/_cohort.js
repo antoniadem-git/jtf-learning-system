@@ -6,10 +6,11 @@
 // A Grants & Services record is in the cohort when:
 //   - Grant Year is the current calendar year
 //   - Cycle (from Proposal) is not Policy or Convening
-//   - Status is not "On Hold (Matching Funds)" or "On Hold (Future Multi-Year)"
+//   - Status is not "On Hold (Matching Funds)", "On Hold (Future Multi-Year)"
+//     or "Never Paid Out"
 
 export const EXCLUDED_CYCLES = ['Policy', 'Convening'];
-export const EXCLUDED_STATUSES = ['On Hold (Matching Funds)', 'On Hold (Future Multi-Year)'];
+export const EXCLUDED_STATUSES = ['On Hold (Matching Funds)', 'On Hold (Future Multi-Year)', 'Never Paid Out'];
 
 export function isCohortGrant(fields, year) {
   if (Number(fields['Grant Year']) !== year) return false;
