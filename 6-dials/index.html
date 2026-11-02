@@ -410,6 +410,11 @@
       <div style="text-align:center; padding:8px 0 12px;">
         <div id="annual-review-status" class="mono" style="font-size:30px; font-weight:700; color:var(--good);">On Track</div>
       </div>
+
+      <a href="#" id="annual-review-more-details" style="font-size:13px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:6px; margin-top:2px;">
+        More Details
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="19" y2="12"></line><polyline points="13 6 19 12 13 18"></polyline></svg>
+      </a>
     </div>
 
     <!-- DIAL 4: ACTIVE GRANT PORTFOLIO -->
@@ -650,6 +655,52 @@
 
       <div id="roi-body">
         <div class="drill-empty">Loading&hellip;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANNUAL REVIEW DRILL-DOWN -->
+<div class="drilldown-overlay" id="annual-review-drilldown" hidden>
+  <div class="wrap" style="padding-top:32px;">
+    <button type="button" class="drilldown-back" id="annual-review-drilldown-close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="11 18 5 12 11 6"></polyline></svg>
+      Back to dashboard
+    </button>
+
+    <div style="margin:12px 0 28px;">
+      <div style="font-size:22px; font-weight:700;">Annual Review</div>
+      <p style="max-width:640px; color:var(--text-muted); font-size:14px; line-height:1.55; margin:6px 0 0;">The questions behind the Annual Review status.</p>
+    </div>
+
+    <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:13px; max-width:560px;">
+      <div style="display:flex; gap:10px; align-items:flex-start;">
+        <span class="status-dot" style="background:var(--warn);"></span>
+        <div>
+          <div style="font-size:13px; font-weight:600;">Political &amp; economic conditions</div>
+          <div style="font-size:12px; color:var(--text-faint);">Shifted &mdash; energy costs and federal posture under review</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:flex-start;">
+        <span class="status-dot" style="background:var(--good);"></span>
+        <div>
+          <div style="font-size:13px; font-weight:600;">Community needs</div>
+          <div style="font-size:12px; color:var(--text-faint);">Reassessed &mdash; partner survey complete</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:flex-start;">
+        <span class="status-dot" style="background:var(--good);"></span>
+        <div>
+          <div style="font-size:13px; font-weight:600;">Programs working</div>
+          <div style="font-size:12px; color:var(--text-faint);">On track &mdash; metrics audit underway</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:flex-start;">
+        <span class="status-dot" style="background:var(--neutral-status);"></span>
+        <div>
+          <div style="font-size:13px; font-weight:600;">Plan credibility</div>
+          <div style="font-size:12px; color:var(--text-faint);">Pending &mdash; assessment follows Q1&ndash;Q2 findings</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1199,6 +1250,7 @@
 
   setupDrilldown('grantee-signal-card', 'grantee-signal-drilldown', 'drilldown-close');
   setupDrilldown('field-signal-more-details', 'field-signal-drilldown', 'field-signal-drilldown-close');
+  setupDrilldown('annual-review-more-details', 'annual-review-drilldown', 'annual-review-drilldown-close');
   setupDrilldown('economic-output-more-details', 'economic-output-drilldown', 'economic-output-drilldown-close');
 
   // Third level: clicking a breakdown number opens the grant lists page
