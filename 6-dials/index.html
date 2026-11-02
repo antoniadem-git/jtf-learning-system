@@ -178,6 +178,10 @@
   .trend-bullets[hidden], .drill-soon[hidden] { display: none; }
   .trend-bullets li { font-size: 13px; line-height: 1.5; color: var(--text-muted); }
   .drill-soon { font-size: 13px; color: var(--text-faint); font-style: italic; }
+  .metric-rows { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px 20px; }
+  .metric-rows[hidden] { display: none; }
+  .metric-rows li { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; font-size: 13px; padding: 10px 12px; background: var(--surface-alt); border-radius: 8px; }
+  .metric-rows .metric-value { font-weight: 700; font-size: 15px; white-space: nowrap; }
 
 
   .card-heading { position: relative; display: flex; align-items: center; justify-content: center; }
@@ -581,6 +585,19 @@
         </div>
       </div>
 
+      <!-- PROPOSED IMPACT FOR 2026 COHORT -->
+      <div class="card span-all" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="color:var(--accent); display:flex;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"></circle></svg>
+          </span>
+          <span style="font-size:15px; font-weight:700;">Proposed Impact for 2026 Cohort</span>
+        </div>
+        <div class="drill-soon" id="proposed-soon">Loading&hellip;</div>
+        <ul class="metric-rows" id="drill-proposed-impact" hidden></ul>
+        <div id="proposed-impact-detail" style="font-size:12px; color:var(--text-faint);" hidden></div>
+      </div>
+
       <!-- TRENDS FROM CHECK-INS -->
       <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
         <div style="display:flex; align-items:center; gap:10px;">
@@ -591,17 +608,6 @@
         </div>
         <div class="drill-soon" id="trends-soon">Coming soon.</div>
         <ul class="trend-bullets" id="drill-trends" hidden></ul>
-      </div>
-
-      <!-- PROPOSED IMPACT FOR 2026 COHORT -->
-      <div class="card" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="color:var(--accent); display:flex;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"></circle></svg>
-          </span>
-          <span style="font-size:15px; font-weight:700;">Proposed Impact for 2026 Cohort</span>
-        </div>
-        <div class="drill-soon">Coming soon.</div>
       </div>
 
       <!-- REPORTS DUE -->
@@ -1119,6 +1125,36 @@
     });
   }
 
+  function renderProposedImpact(pi) {
+    var soon = document.getElementById('proposed-soon');
+    var list = document.getElementById('drill-proposed-impact');
+    var detail = document.getElementById('proposed-impact-detail');
+    if (!list || !soon) return;
+    if (!pi || !pi.metrics) {
+      soon.hidden = false;
+      soon.textContent = 'Unavailable right now.';
+      return;
+    }
+    list.innerHTML = '';
+    pi.metrics.forEach(function (m) {
+      var li = document.createElement('li');
+      var label = document.createElement('span');
+      label.textContent = m.label;
+      var value = document.createElement('span');
+      value.className = 'mono metric-value';
+      value.textContent = (m.prefix || '') + Number(m.value).toLocaleString('en-US');
+      li.appendChild(label);
+      li.appendChild(value);
+      list.appendChild(li);
+    });
+    soon.hidden = true;
+    list.hidden = false;
+    if (detail && typeof pi.grantsWithProposal === 'number') {
+      detail.textContent = 'Proposed totals from ' + pi.grantsWithProposal + ' cohort grants with a proposal on file.';
+      detail.hidden = false;
+    }
+  }
+
   fetch('/api/grantee-signal')
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -1135,6 +1171,7 @@
       renderDrillList('drill-at-risk', data.atRiskGrants);
       renderDrillList('drill-no-data', data.noDataGrants);
       renderReportsDue(data.reportsDue);
+      renderProposedImpact(data.proposedImpact);
       setBreakdown('breakdown-on-track', data.percent);
       setBreakdown('breakdown-at-risk', data.atRiskPercent);
       setBreakdownDetail('breakdown-on-track-detail', data.onTrack, data.total);
@@ -1145,6 +1182,7 @@
       renderDrillList('drill-at-risk', null);
       renderDrillList('drill-no-data', null);
       renderReportsDue(null);
+      renderProposedImpact(null);
     });
 
   var overlayStack = [];

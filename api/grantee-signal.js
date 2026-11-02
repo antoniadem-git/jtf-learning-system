@@ -30,8 +30,26 @@
 //                            reports are excluded), counted per
 //                            "Report Due Date" and sorted
 //                            chronologically.
+//   Proposed Impact        = for cohort grants, the sum of each metric
+//                            across "Grant Impact Data" records whose
+//                            Proposed/Actual = "Proposed", linked to the
+//                            grant via "Grant & Service ID".
 
 import { isCohortGrant } from './_cohort.js';
+
+// Metrics shown on the Proposed Impact card, in display order: the label
+// from the Core Metrics doc and the Grant Impact Data field that holds it.
+const PROPOSED_IMPACT_METRICS = [
+  { label: 'Workers trained / participants served', field: 'People participated in training' },
+  { label: 'Entrepreneurs trained / participants served', field: 'Total entrepreneurs supported' },
+  { label: 'Households / businesses connected', field: 'Broadband Connected' },
+  { label: 'Community members impacted', field: 'People Served' },
+  { label: 'Jobs created', field: 'New Jobs Created' },
+  { label: 'Jobs retained', field: 'Jobs Retained' },
+  { label: 'Businesses created / served', field: 'New businesses created' },
+  { label: 'Public funds leveraged', field: 'Public funds leveraged', prefix: '$' },
+  { label: 'Private funds leveraged', field: 'Private funds leveraged', prefix: '$' },
+];
 
 export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
@@ -48,7 +66,10 @@ export default async function handler(req, res) {
     do {
       const url = new URL(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}`);
       url.searchParams.set('pageSize', '100');
-      Object.entries(params || {}).forEach(([k, v]) => url.searchParams.set(k, v));
+      Object.entries(params || {}).forEach(([k, v]) => {
+        if (Array.isArray(v)) v.forEach((item) => url.searchParams.append(k, item));
+        else url.searchParams.set(k, v);
+      });
       if (offset) url.searchParams.set('offset', offset);
 
       const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -165,8 +186,42 @@ export default async function handler(req, res) {
       .sort()
       .map((date) => ({ date, count: countByDate[date] }));
 
+    // Proposed Impact: sums of the proposed values on Grant Impact Data
+    // records for cohort grants. Isolated so a failure here never breaks
+    // the rest of the Grantee Signal data.
+    let proposedImpact = null;
+    try {
+      const impactRecords = await fetchAll('Grant Impact Data', {
+        filterByFormula: "{Proposed/Actual}='Proposed'",
+        'fields[]': ['Grant & Service ID', 'Proposed/Actual', ...PROPOSED_IMPACT_METRICS.map((m) => m.field)],
+      });
+      const totals = PROPOSED_IMPACT_METRICS.map(() => 0);
+      const grantsWithProposal = new Set();
+      impactRecords.forEach((rec) => {
+        const f = rec.fields || {};
+        const linkedGrants = (f['Grant & Service ID'] || []).filter((gid) => cohortIds.has(gid));
+        if (linkedGrants.length === 0) return;
+        linkedGrants.forEach((gid) => grantsWithProposal.add(gid));
+        PROPOSED_IMPACT_METRICS.forEach((m, i) => {
+          const v = Number(f[m.field]);
+          if (Number.isFinite(v)) totals[i] += v;
+        });
+      });
+      proposedImpact = {
+        grantsWithProposal: grantsWithProposal.size,
+        metrics: PROPOSED_IMPACT_METRICS.map((m, i) => ({
+          label: m.label,
+          value: totals[i],
+          prefix: m.prefix || '',
+        })),
+      };
+    } catch (e) {
+      proposedImpact = null;
+    }
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     res.status(200).json({
+      proposedImpact,
       onTrack,
       total,
       percent,
