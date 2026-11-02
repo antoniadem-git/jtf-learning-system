@@ -4,8 +4,10 @@
 // is scoped to the CURRENT calendar year, computed dynamically so it
 // rolls over automatically each January, and to the shared grant
 // cohort defined in ./_cohort.js (same rules as /api/economic-output:
-// excludes Policy and Convening cycles and the On Hold (Matching Funds)
-// / On Hold (Future Multi-Year) / Never Paid Out statuses):
+// mirrors the Airtable "2026 Grants (LEARNING SYSTEM)" view: excludes
+// State Policy, Federal Policy and Convening strategies, the On Hold
+// (Matching Funds) / On Hold (Future Multi-Year) / Never Paid Out
+// statuses, and Service Type = TA):
 //
 //   percent (current-year cohort) = numerator = cohort grants whose
 //                            most recent COMPLETED check-in has

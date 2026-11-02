@@ -60,7 +60,8 @@ export default async function handler(req, res) {
       fetchAll(CG_BASE, 'Grants & Services', [
         'Grant Year',
         'Status',
-        'Cycle (from Proposal)',
+        'Strategy (from Proposal)',
+        'Service Type',
         'Grant Proposals',
       ]),
       fetchAll(CG_BASE, 'Proposals', ['ID']),

@@ -73,7 +73,7 @@ export default async function handler(req, res) {
       fetchAll('Grants & Services', [
         'Grant Year',
         'Status',
-        'Cycle (from Proposal)',
+        'Service Type',
         'Grant Amount',
         'Strategy (from Proposal)',
       ]),
