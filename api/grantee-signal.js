@@ -38,15 +38,19 @@
 import { isCohortGrant } from './_cohort.js';
 
 // Metrics shown on the Proposed Impact card, in display order: the label
-// from the Core Metrics doc and the Grant Impact Data field that holds it.
+// from the Core Metrics doc and the Grant Impact Data field that holds it
+// (field: null = no Airtable field yet; the card shows "to be built").
 const PROPOSED_IMPACT_METRICS = [
   { label: 'Workers trained / participants served', field: 'People participated in training' },
   { label: 'Workers placed in employment at exit', field: 'Trainees receiving employment' },
+  { label: 'Participants who received wraparound supports', field: null },
   { label: 'Entrepreneurs trained / participants served', field: 'Total entrepreneurs supported' },
   { label: 'Access to capital secured', field: 'Access to Capital Secured' },
   { label: 'Households / businesses connected', field: 'Broadband Connected' },
   { label: 'Clean energy capacity installed', field: 'Renewables installed (kW)', suffix: ' kW' },
   { label: 'Acres reclaimed or remediated', field: 'Acres of Land Reclaimed / Remediated' },
+  { label: 'Properties or sites returned to active use', field: null },
+  { label: 'Local tax revenue', field: null },
   { label: 'Community members impacted', field: 'People Served' },
   { label: 'Jobs created', field: 'New Jobs Created' },
   { label: 'Jobs retained', field: 'Jobs Retained' },
@@ -198,7 +202,7 @@ export default async function handler(req, res) {
     try {
       const impactRecords = await fetchAll('Grant Impact Data', {
         filterByFormula: "{Proposed/Actual}='Proposed'",
-        'fields[]': ['Grant & Service ID', 'Proposed/Actual', ...PROPOSED_IMPACT_METRICS.map((m) => m.field)],
+        'fields[]': ['Grant & Service ID', 'Proposed/Actual', ...PROPOSED_IMPACT_METRICS.map((m) => m.field).filter(Boolean)],
       });
       const totals = PROPOSED_IMPACT_METRICS.map(() => 0);
       const grantsWithProposal = new Set();
@@ -208,6 +212,7 @@ export default async function handler(req, res) {
         if (linkedGrants.length === 0) return;
         linkedGrants.forEach((gid) => grantsWithProposal.add(gid));
         PROPOSED_IMPACT_METRICS.forEach((m, i) => {
+          if (!m.field) return;
           const v = Number(f[m.field]);
           if (Number.isFinite(v)) totals[i] += v;
         });
@@ -216,7 +221,7 @@ export default async function handler(req, res) {
         grantsWithProposal: grantsWithProposal.size,
         metrics: PROPOSED_IMPACT_METRICS.map((m, i) => ({
           label: m.label,
-          value: totals[i],
+          value: m.field ? totals[i] : null,
           prefix: m.prefix || '',
           suffix: m.suffix || '',
         })),
