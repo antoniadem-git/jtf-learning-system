@@ -540,7 +540,7 @@
           <span style="font-size:15px; font-weight:700;">Signal Breakdown</span>
         </div>
 
-        <div class="subcols subcols-2">
+        <div class="subcols">
           <div>
             <button type="button" class="signal-link" data-grants-target="section-on-track" title="See the on track grants">
               <div id="breakdown-on-track" class="mono" style="font-size:44px; font-weight:700; color:var(--good); line-height:1.1;">75%</div>
@@ -553,6 +553,13 @@
               <div id="breakdown-at-risk" class="mono" style="font-size:44px; font-weight:700; color:var(--risk); line-height:1.1;">15%</div>
               <div class="signal-label" style="font-size:15px; color:var(--text-muted); margin-top:6px;">At Risk or Delayed</div>
               <div id="breakdown-at-risk-detail" style="font-size:12px; color:var(--text-faint); margin-top:4px;"></div>
+            </button>
+          </div>
+          <div>
+            <button type="button" class="signal-link" data-grants-target="section-no-data" title="See the grants with no check-in yet">
+              <div id="breakdown-no-data" class="mono" style="font-size:44px; font-weight:700; color:var(--neutral-status); line-height:1.1;">10%</div>
+              <div class="signal-label" style="font-size:15px; color:var(--text-muted); margin-top:6px;">No Data Yet</div>
+              <div id="breakdown-no-data-detail" style="font-size:12px; color:var(--text-faint); margin-top:4px;"></div>
             </button>
           </div>
         </div>
@@ -1198,8 +1205,10 @@
       renderProposedImpact(data.proposedImpact);
       setBreakdown('breakdown-on-track', data.percent);
       setBreakdown('breakdown-at-risk', data.atRiskPercent);
+      setBreakdown('breakdown-no-data', data.noDataPercent);
       setBreakdownDetail('breakdown-on-track-detail', data.onTrack, data.total);
       setBreakdownDetail('breakdown-at-risk-detail', data.atRisk, data.total);
+      setBreakdownDetail('breakdown-no-data-detail', data.noData, data.total);
     })
     .catch(function () {
       renderDrillList('drill-on-track', null);
