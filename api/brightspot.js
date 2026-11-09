@@ -18,6 +18,15 @@
 //      proposals under the same "ID" name, and its "LEL Program (from Step 1)"
 //      lookup says whether the proposal came in as "Bright Spot".
 // A grant counts once per count, however many proposals it has.
+//
+//   - approvedBrightSpot: counts LEL Step 2 Application records straight from
+//     the LEL base (no cohort or year filter) where ALL THREE are true:
+//       [EVAL] Final Decision = "Approve",
+//       Award Notification Sent is not empty,
+//       LEL Program (from Step 1) includes "Bright Spot".
+//     It feeds the "Brightspot candidates" bar and the "Bright Spot
+//     projects" list on the Economic Output drill-down; `organizations` is
+//     each matching record's "Organization" name, sorted A to Z.
 
 import { isCohortGrant } from './_cohort.js';
 
@@ -65,7 +74,13 @@ export default async function handler(req, res) {
         'Grant Proposals',
       ]),
       fetchAll(CG_BASE, 'Proposals', ['ID']),
-      fetchAll(LEL_BASE, 'LEL Step 2 Application', ['ID', 'LEL Program (from Step 1)']),
+      fetchAll(LEL_BASE, 'LEL Step 2 Application', [
+        'ID',
+        'LEL Program (from Step 1)',
+        'Organization',
+        '[EVAL] Final Decision',
+        'Award Notification Sent',
+      ]),
     ]);
 
     const proposalNameById = new Map();
@@ -114,8 +129,28 @@ export default async function handler(req, res) {
       }
     });
 
+    const approvedOrgs = [];
+    lelProposals.forEach((p) => {
+      const f = p.fields || {};
+      if (f['[EVAL] Final Decision'] !== 'Approve') return;
+      if (!f['Award Notification Sent']) return;
+      const raw = f['LEL Program (from Step 1)'];
+      const programs = Array.isArray(raw) ? raw : raw ? [raw] : [];
+      if (!programs.includes(BRIGHT_SPOT)) return;
+      approvedOrgs.push(nameKey(f['Organization']) || 'Unnamed organization');
+    });
+    approvedOrgs.sort((a, b) => a.localeCompare(b));
+
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
-    res.status(200).json({ year: currentYear, grants: cohortGrants, matchedInLel, brightSpot, inPipeline, byProgram });
+    res.status(200).json({
+      year: currentYear,
+      grants: cohortGrants,
+      matchedInLel,
+      brightSpot,
+      inPipeline,
+      byProgram,
+      approvedBrightSpot: { count: approvedOrgs.length, organizations: approvedOrgs },
+    });
   } catch (err) {
     res.status(200).json({ error: 'fetch_failed', message: String(err) });
   }
