@@ -1,0 +1,13 @@
+# Secrets: tokens belong in Vercel environment variables, never in the repo
+.env
+.env.*
+.vercel
+
+# macOS
+.DS_Store
+
+# Local tooling and scratch files
+node_modules/
+*.log
+mock.py
+.claude/settings.local.json
