@@ -5,10 +5,9 @@
 // Cohort rules live in ./_cohort.js (shared with /api/grantee-signal).
 //
 // Every Grant Impact Data record linked to a cohort grant (via its
-// "Grant & Service ID" field) is counted, whether Proposed or Actual,
-// except records whose "Proposed Inclusion" is set to "Exclude" (the
-// table's own way of retiring a Proposed record once an Actual one
-// exists, so the two aren't double-counted).
+// "Grant & Service ID" field) is counted, whether Proposed or Actual.
+// The "Proposed Inclusion" = "Exclude" flag is deliberately NOT applied:
+// Antonia asked for the total to include those records too.
 //
 // The total is also split by the grant's Strategy (the record's
 // "Strategy (from Grant Proposal)" lookup). The dashboard's three
@@ -80,7 +79,6 @@ export default async function handler(req, res) {
       fetchAll('Grant Impact Data', [
         'Economic Output',
         'Grant & Service ID',
-        'Proposed Inclusion',
         'Strategy (from Grant Proposal)',
       ]),
     ]);
@@ -103,7 +101,6 @@ export default async function handler(req, res) {
     const grantsWithOutput = new Set();
     impact.forEach((rec) => {
       const f = rec.fields || {};
-      if (f['Proposed Inclusion'] === 'Exclude') return;
       const amount = typeof f['Economic Output'] === 'number' ? f['Economic Output'] : 0;
       if (!amount) return;
       const linked = (f['Grant & Service ID'] || []).filter((id) => cohortIds.has(id));
